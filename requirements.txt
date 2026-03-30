@@ -1,0 +1,10 @@
+streamlit
+streamlit-lottie
+streamlit-option-menu
+langchain
+langchain-core
+langchain-community
+langchain-google-genai
+groq
+faiss-cpu
+requests

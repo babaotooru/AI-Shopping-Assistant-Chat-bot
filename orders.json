@@ -1,0 +1,506 @@
+<<<<<<< HEAD
+[
+  {
+    "name": "Samsung Galaxy S23 Ultra",
+    "product_id": "ORD1001",
+    "category": "Smartphone",
+    "order_placed_date": "2025-03-15",
+    "expected_delivery_date": "2025-03-20",
+    "price": "$1199",
+    "rating": "4.7",
+    "image_link": "data:image/jpeg;base64,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"
+  },
+  {
+    "name": "Apple iPhone 15 Pro",
+    "product_id": "ORD1002",
+    "category": "Smartphone",
+    "order_placed_date": "2025-03-10",
+    "expected_delivery_date": "2025-03-17",
+    "price": "$1299",
+    "rating": "4.8",
+    "image_link": "https://fdn.gsmarena.com/imgroot/news/23/09/apple-iphone-15-pro-what-to-expect/-822/gsmarena_001.jpg"
+  },
+  {
+    "name": "Sony WH-1000XM5 Headphones",
+    "product_id": "ORD1003",
+    "category": "Electronics",
+    "order_placed_date": "2025-03-18",
+    "expected_delivery_date": "2025-03-23",
+    "price": "$399",
+    "rating": "4.8",
+    "image_link": "https://www.bigbasket.com/media/uploads/p/xxl/40329893-5_2-sony-wh-1000xm5-bluetooth-headphone-with-mic-auto-noise-cancellation-optimizer-over-ear-blue.jpg"
+  },
+  {
+    "name": "Apple MacBook Air M2",
+    "product_id": "ORD1004",
+    "category": "Laptop",
+    "order_placed_date": "2025-03-10",
+    "expected_delivery_date": "2025-03-17",
+    "price": "$999",
+    "rating": "4.9",
+    "image_link": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxbSh1COAeG62-zK5f1EuDi5XWM78wqsVwBg&s"
+  },
+  {
+    "name": "Fitbit Charge 6",
+    "product_id": "ORD1005",
+    "category": "Fitness",
+    "order_placed_date": "2025-03-05",
+    "expected_delivery_date": "2025-03-12",
+    "price": "$149",
+    "rating": "4.5",
+    "image_link": "https://m.media-amazon.com/images/I/41M+F43gRJL._AC_UF1000,1000_QL80_.jpg"
+  },
+  {
+    "name": "Nike Air Max 270",
+    "product_id": "ORD1006",
+    "category": "Footwear",
+    "order_placed_date": "2025-03-08",
+    "expected_delivery_date": "2025-03-14",
+    "price": "$130",
+    "rating": "4.6",
+    "image_link": "https://rukminim2.flixcart.com/image/850/1000/xif0q/shoe/h/t/l/-original-imah4zkzwufnzkdm.jpeg?q=90&crop=false"
+  },
+  {
+    "name": "Kindle Paperwhite",
+    "product_id": "ORD1007",
+    "category": "Electronics",
+    "order_placed_date": "2025-03-12",
+    "expected_delivery_date": "2025-03-17",
+    "price": "$139",
+    "rating": "4.7",
+    "image_link": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTzapGUnNLR2QiLVP3phrLoprWotRj6litBA&s"
+  },
+  {
+    "name": "JBL Flip 6 Bluetooth Speaker",
+    "product_id": "ORD1008",
+    "category": "Audio",
+    "order_placed_date": "2025-03-09",
+    "expected_delivery_date": "2025-03-13",
+    "price": "$129",
+    "rating": "4.6",
+    "image_link": "https://rukminim2.flixcart.com/image/850/1000/l4oi4cw0/speaker/4/o/b/-original-imagfgsunywhrgsw.jpeg?q=90&crop=false"
+  },
+  {
+    "name": "Samsung 55\" Smart 4K TV",
+    "product_id": "ORD1009",
+    "category": "Home Appliance",
+    "order_placed_date": "2025-03-01",
+    "expected_delivery_date": "2025-03-05",
+    "price": "$599",
+    "rating": "4.8",
+    "image_link": "https://img-prd-pim.poorvika.com/cdn-cgi/image/width=500,height=500,quality=75/product/samsung-4k-ultra-hd-led-smart-tv-du7000-55-inch-left-view.png"
+  },
+  {
+    "name": "Dyson V15 Detect Vacuum Cleaner",
+    "product_id": "ORD1010",
+    "category": "Home Appliance",
+    "order_placed_date": "2025-03-06",
+    "expected_delivery_date": "2025-03-10",
+    "price": "$699",
+    "rating": "4.9",
+    "image_link": "https://rukminim2.flixcart.com/image/750/900/xif0q/vacuum-cleaner/r/z/e/v15-detect-cord-free-dyson-original-imaggz2ngvngkrm7.jpeg?q=20&crop=false"
+  },
+  {
+    "name": "Logitech MX Master 3 Mouse",
+    "product_id": "ORD1011",
+    "category": "Accessories",
+    "order_placed_date": "2025-03-16",
+    "expected_delivery_date": "2025-03-19",
+    "price": "$99",
+    "rating": "4.8",
+    "image_link": "https://resource.logitech.com/w_1206,c_limit,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/logitech/en/products/mice/mx-master-3s-business-wireless-mouse/buy/mx-master-3s-business-product-callout.png?v=1"
+  },
+  {
+    "name": "Dell Ultrasharp 27\" Monitor",
+    "product_id": "ORD1012",
+    "category": "Computer",
+    "order_placed_date": "2025-03-13",
+    "expected_delivery_date": "2025-03-18",
+    "price": "$429",
+    "rating": "4.7",
+    "image_link": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdFnah3JNmrrgjhp2fWRQ2gBwmBXzww8Kisw&s"
+  },
+  {
+    "name": "Instant Pot Duo 7-in-1",
+    "product_id": "ORD1013",
+    "category": "Kitchen",
+    "order_placed_date": "2025-03-04",
+    "expected_delivery_date": "2025-03-07",
+    "price": "$89",
+    "rating": "4.8",
+    "image_link": "https://m.media-amazon.com/images/I/710KoJMG2lL.jpg"
+  },
+  {
+    "name": "Adidas Ultraboost 22",
+    "product_id": "ORD1014",
+    "category": "Footwear",
+    "order_placed_date": "2025-03-07",
+    "expected_delivery_date": "2025-03-12",
+    "price": "$180",
+    "rating": "4.7",
+    "image_link": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6X9xuEy7F3luSdcX2lwVnLMv2EzWm05RHSw&s"
+  },
+  {
+    "name": "HP Envy x360 Laptop",
+    "product_id": "ORD1015",
+    "category": "Laptop",
+    "order_placed_date": "2025-03-03",
+    "expected_delivery_date": "2025-03-09",
+    "price": "$849",
+    "rating": "4.6",
+    "image_link": "https://in-media.apjonlinecdn.com/catalog/product/c/0/c08644087_evo_i5.png"
+  },
+  {
+    "name": "Garmin Forerunner 255",
+    "product_id": "ORD1016",
+    "category": "Fitness",
+    "order_placed_date": "2025-03-02",
+    "expected_delivery_date": "2025-03-06",
+    "price": "$349",
+    "rating": "4.7",
+    "image_link": "https://images-cdn.ubuy.co.in/66a90789c31f017fc81b3bae-forerunner-255-music-whitestone.jpg"
+  },
+  {
+    "name": "Google Nest Thermostat",
+    "product_id": "ORD1017",
+    "category": "Smart Home",
+    "order_placed_date": "2025-03-14",
+    "expected_delivery_date": "2025-03-18",
+    "price": "$129",
+    "rating": "4.5",
+    "image_link": "https://lh3.googleusercontent.com/hoJ9znZCD2aznrxUNy7TBGdwO3RXF0h_UaTXdulnoTUMdbU406aYA6aQNi4nOJoQ-R72VoWtlvjJs6Uskp9yfdAm8nk2OZctsW4V_Z58=rw-e365-w842-v1"
+  },
+  {
+    "name": "Canon EOS R50 Camera",
+    "product_id": "ORD1018",
+    "category": "Camera",
+    "order_placed_date": "2025-03-11",
+    "expected_delivery_date": "2025-03-16",
+    "price": "$879",
+    "rating": "4.9",
+    "image_link": "https://rukminim2.flixcart.com/image/850/1000/xif0q/dslr-camera/n/p/t/eos-r50-24-2-r50-canon-original-imagngc7syac8pfd.jpeg?q=20&crop=false"
+  },
+  {
+    "name": "Echo Dot 5th Gen",
+    "product_id": "ORD1019",
+    "category": "Smart Home",
+    "order_placed_date": "2025-03-17",
+    "expected_delivery_date": "2025-03-20",
+    "price": "$49",
+    "rating": "4.6",
+    "image_link": "https://m.media-amazon.com/images/I/71jNr0MoZEL._AC_UF1000,1000_QL80_.jpg"
+  },
+  {
+    "name": "Asus ROG Strix Gaming Laptop",
+    "product_id": "ORD1020",
+    "category": "Gaming",
+    "order_placed_date": "2025-03-14",
+    "expected_delivery_date": "2025-03-19",
+    "price": "$1599",
+    "rating": "4.8",
+    "image_link": "https://m.media-amazon.com/images/I/81GrCeuCzxL.jpg"
+  },
+  {
+    "name": "Bose QuietComfort Earbuds II",
+    "product_id": "ORD1021",
+    "category": "Audio",
+    "order_placed_date": "2025-03-05",
+    "expected_delivery_date": "2025-03-09",
+    "price": "$299",
+    "rating": "4.9",
+    "image_link": "https://m.media-amazon.com/images/I/51qRS8hb-9L.jpg"
+  },
+  {
+    "name": "KitchenAid Stand Mixer",
+    "product_id": "ORD1022",
+    "category": "Kitchen",
+    "order_placed_date": "2025-03-08",
+    "expected_delivery_date": "2025-03-13",
+    "price": "$429",
+    "rating": "4.8",
+    "image_link": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpssyM8Z-qcT4_0r7fPHdeqDb2epHeMcd63g&s"
+  },
+  {
+    "name": "LG UltraGear 34\" Monitor",
+    "product_id": "ORD1023",
+    "category": "Monitor",
+    "order_placed_date": "2025-03-02",
+    "expected_delivery_date": "2025-03-06",
+    "price": "$799",
+    "rating": "4.8",
+    "image_link": "https://m.media-amazon.com/images/I/81soN3bwVFL.jpg"
+  },
+  {
+    "name": "Lenovo Tab P12 Pro",
+    "product_id": "ORD1024",
+    "category": "Tablet",
+    "order_placed_date": "2025-03-06",
+    "expected_delivery_date": "2025-03-11",
+    "price": "$649",
+    "rating": "4.6",
+    "image_link": "https://p1-ofp.static.pub/fes/cms/2023/02/22/bw7w274h7jm6t6vqo2nbrzs9lozrow585351.png"
+  },
+  {
+    "name": "Reebok Treadmill",
+    "product_id": "ORD1025",
+    "category": "Fitness",
+    "order_placed_date": "2025-03-01",
+    "expected_delivery_date": "2025-03-06",
+    "price": "$799",
+    "rating": "4.7",
+    "image_link": "https://m.media-amazon.com/images/I/61XspHuIRSL._AC_UF894,1000_QL80_.jpg"
+  }
+=======
+[
+  {
+    "name": "Samsung Galaxy S23 Ultra",
+    "product_id": "ORD1001",
+    "category": "Smartphone",
+    "order_placed_date": "2025-03-15",
+    "expected_delivery_date": "2025-03-20",
+    "price": "$1199",
+    "rating": "4.7",
+    "image_link": "data:image/jpeg;base64,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"
+  },
+  {
+    "name": "Apple iPhone 15 Pro",
+    "product_id": "ORD1002",
+    "category": "Smartphone",
+    "order_placed_date": "2025-03-10",
+    "expected_delivery_date": "2025-03-17",
+    "price": "$1299",
+    "rating": "4.8",
+    "image_link": "https://fdn.gsmarena.com/imgroot/news/23/09/apple-iphone-15-pro-what-to-expect/-822/gsmarena_001.jpg"
+  },
+  {
+    "name": "Sony WH-1000XM5 Headphones",
+    "product_id": "ORD1003",
+    "category": "Electronics",
+    "order_placed_date": "2025-03-18",
+    "expected_delivery_date": "2025-03-23",
+    "price": "$399",
+    "rating": "4.8",
+    "image_link": "https://www.bigbasket.com/media/uploads/p/xxl/40329893-5_2-sony-wh-1000xm5-bluetooth-headphone-with-mic-auto-noise-cancellation-optimizer-over-ear-blue.jpg"
+  },
+  {
+    "name": "Apple MacBook Air M2",
+    "product_id": "ORD1004",
+    "category": "Laptop",
+    "order_placed_date": "2025-03-10",
+    "expected_delivery_date": "2025-03-17",
+    "price": "$999",
+    "rating": "4.9",
+    "image_link": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxbSh1COAeG62-zK5f1EuDi5XWM78wqsVwBg&s"
+  },
+  {
+    "name": "Fitbit Charge 6",
+    "product_id": "ORD1005",
+    "category": "Fitness",
+    "order_placed_date": "2025-03-05",
+    "expected_delivery_date": "2025-03-12",
+    "price": "$149",
+    "rating": "4.5",
+    "image_link": "https://m.media-amazon.com/images/I/41M+F43gRJL._AC_UF1000,1000_QL80_.jpg"
+  },
+  {
+    "name": "Nike Air Max 270",
+    "product_id": "ORD1006",
+    "category": "Footwear",
+    "order_placed_date": "2025-03-08",
+    "expected_delivery_date": "2025-03-14",
+    "price": "$130",
+    "rating": "4.6",
+    "image_link": "https://rukminim2.flixcart.com/image/850/1000/xif0q/shoe/h/t/l/-original-imah4zkzwufnzkdm.jpeg?q=90&crop=false"
+  },
+  {
+    "name": "Kindle Paperwhite",
+    "product_id": "ORD1007",
+    "category": "Electronics",
+    "order_placed_date": "2025-03-12",
+    "expected_delivery_date": "2025-03-17",
+    "price": "$139",
+    "rating": "4.7",
+    "image_link": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTzapGUnNLR2QiLVP3phrLoprWotRj6litBA&s"
+  },
+  {
+    "name": "JBL Flip 6 Bluetooth Speaker",
+    "product_id": "ORD1008",
+    "category": "Audio",
+    "order_placed_date": "2025-03-09",
+    "expected_delivery_date": "2025-03-13",
+    "price": "$129",
+    "rating": "4.6",
+    "image_link": "https://rukminim2.flixcart.com/image/850/1000/l4oi4cw0/speaker/4/o/b/-original-imagfgsunywhrgsw.jpeg?q=90&crop=false"
+  },
+  {
+    "name": "Samsung 55\" Smart 4K TV",
+    "product_id": "ORD1009",
+    "category": "Home Appliance",
+    "order_placed_date": "2025-03-01",
+    "expected_delivery_date": "2025-03-05",
+    "price": "$599",
+    "rating": "4.8",
+    "image_link": "https://img-prd-pim.poorvika.com/cdn-cgi/image/width=500,height=500,quality=75/product/samsung-4k-ultra-hd-led-smart-tv-du7000-55-inch-left-view.png"
+  },
+  {
+    "name": "Dyson V15 Detect Vacuum Cleaner",
+    "product_id": "ORD1010",
+    "category": "Home Appliance",
+    "order_placed_date": "2025-03-06",
+    "expected_delivery_date": "2025-03-10",
+    "price": "$699",
+    "rating": "4.9",
+    "image_link": "https://rukminim2.flixcart.com/image/750/900/xif0q/vacuum-cleaner/r/z/e/v15-detect-cord-free-dyson-original-imaggz2ngvngkrm7.jpeg?q=20&crop=false"
+  },
+  {
+    "name": "Logitech MX Master 3 Mouse",
+    "product_id": "ORD1011",
+    "category": "Accessories",
+    "order_placed_date": "2025-03-16",
+    "expected_delivery_date": "2025-03-19",
+    "price": "$99",
+    "rating": "4.8",
+    "image_link": "https://resource.logitech.com/w_1206,c_limit,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/logitech/en/products/mice/mx-master-3s-business-wireless-mouse/buy/mx-master-3s-business-product-callout.png?v=1"
+  },
+  {
+    "name": "Dell Ultrasharp 27\" Monitor",
+    "product_id": "ORD1012",
+    "category": "Computer",
+    "order_placed_date": "2025-03-13",
+    "expected_delivery_date": "2025-03-18",
+    "price": "$429",
+    "rating": "4.7",
+    "image_link": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdFnah3JNmrrgjhp2fWRQ2gBwmBXzww8Kisw&s"
+  },
+  {
+    "name": "Instant Pot Duo 7-in-1",
+    "product_id": "ORD1013",
+    "category": "Kitchen",
+    "order_placed_date": "2025-03-04",
+    "expected_delivery_date": "2025-03-07",
+    "price": "$89",
+    "rating": "4.8",
+    "image_link": "https://m.media-amazon.com/images/I/710KoJMG2lL.jpg"
+  },
+  {
+    "name": "Adidas Ultraboost 22",
+    "product_id": "ORD1014",
+    "category": "Footwear",
+    "order_placed_date": "2025-03-07",
+    "expected_delivery_date": "2025-03-12",
+    "price": "$180",
+    "rating": "4.7",
+    "image_link": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6X9xuEy7F3luSdcX2lwVnLMv2EzWm05RHSw&s"
+  },
+  {
+    "name": "HP Envy x360 Laptop",
+    "product_id": "ORD1015",
+    "category": "Laptop",
+    "order_placed_date": "2025-03-03",
+    "expected_delivery_date": "2025-03-09",
+    "price": "$849",
+    "rating": "4.6",
+    "image_link": "https://in-media.apjonlinecdn.com/catalog/product/c/0/c08644087_evo_i5.png"
+  },
+  {
+    "name": "Garmin Forerunner 255",
+    "product_id": "ORD1016",
+    "category": "Fitness",
+    "order_placed_date": "2025-03-02",
+    "expected_delivery_date": "2025-03-06",
+    "price": "$349",
+    "rating": "4.7",
+    "image_link": "https://images-cdn.ubuy.co.in/66a90789c31f017fc81b3bae-forerunner-255-music-whitestone.jpg"
+  },
+  {
+    "name": "Google Nest Thermostat",
+    "product_id": "ORD1017",
+    "category": "Smart Home",
+    "order_placed_date": "2025-03-14",
+    "expected_delivery_date": "2025-03-18",
+    "price": "$129",
+    "rating": "4.5",
+    "image_link": "https://lh3.googleusercontent.com/hoJ9znZCD2aznrxUNy7TBGdwO3RXF0h_UaTXdulnoTUMdbU406aYA6aQNi4nOJoQ-R72VoWtlvjJs6Uskp9yfdAm8nk2OZctsW4V_Z58=rw-e365-w842-v1"
+  },
+  {
+    "name": "Canon EOS R50 Camera",
+    "product_id": "ORD1018",
+    "category": "Camera",
+    "order_placed_date": "2025-03-11",
+    "expected_delivery_date": "2025-03-16",
+    "price": "$879",
+    "rating": "4.9",
+    "image_link": "https://rukminim2.flixcart.com/image/850/1000/xif0q/dslr-camera/n/p/t/eos-r50-24-2-r50-canon-original-imagngc7syac8pfd.jpeg?q=20&crop=false"
+  },
+  {
+    "name": "Echo Dot 5th Gen",
+    "product_id": "ORD1019",
+    "category": "Smart Home",
+    "order_placed_date": "2025-03-17",
+    "expected_delivery_date": "2025-03-20",
+    "price": "$49",
+    "rating": "4.6",
+    "image_link": "https://m.media-amazon.com/images/I/71jNr0MoZEL._AC_UF1000,1000_QL80_.jpg"
+  },
+  {
+    "name": "Asus ROG Strix Gaming Laptop",
+    "product_id": "ORD1020",
+    "category": "Gaming",
+    "order_placed_date": "2025-03-14",
+    "expected_delivery_date": "2025-03-19",
+    "price": "$1599",
+    "rating": "4.8",
+    "image_link": "https://m.media-amazon.com/images/I/81GrCeuCzxL.jpg"
+  },
+  {
+    "name": "Bose QuietComfort Earbuds II",
+    "product_id": "ORD1021",
+    "category": "Audio",
+    "order_placed_date": "2025-03-05",
+    "expected_delivery_date": "2025-03-09",
+    "price": "$299",
+    "rating": "4.9",
+    "image_link": "https://m.media-amazon.com/images/I/51qRS8hb-9L.jpg"
+  },
+  {
+    "name": "KitchenAid Stand Mixer",
+    "product_id": "ORD1022",
+    "category": "Kitchen",
+    "order_placed_date": "2025-03-08",
+    "expected_delivery_date": "2025-03-13",
+    "price": "$429",
+    "rating": "4.8",
+    "image_link": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpssyM8Z-qcT4_0r7fPHdeqDb2epHeMcd63g&s"
+  },
+  {
+    "name": "LG UltraGear 34\" Monitor",
+    "product_id": "ORD1023",
+    "category": "Monitor",
+    "order_placed_date": "2025-03-02",
+    "expected_delivery_date": "2025-03-06",
+    "price": "$799",
+    "rating": "4.8",
+    "image_link": "https://m.media-amazon.com/images/I/81soN3bwVFL.jpg"
+  },
+  {
+    "name": "Lenovo Tab P12 Pro",
+    "product_id": "ORD1024",
+    "category": "Tablet",
+    "order_placed_date": "2025-03-06",
+    "expected_delivery_date": "2025-03-11",
+    "price": "$649",
+    "rating": "4.6",
+    "image_link": "https://p1-ofp.static.pub/fes/cms/2023/02/22/bw7w274h7jm6t6vqo2nbrzs9lozrow585351.png"
+  },
+  {
+    "name": "Reebok Treadmill",
+    "product_id": "ORD1025",
+    "category": "Fitness",
+    "order_placed_date": "2025-03-01",
+    "expected_delivery_date": "2025-03-06",
+    "price": "$799",
+    "rating": "4.7",
+    "image_link": "https://m.media-amazon.com/images/I/61XspHuIRSL._AC_UF894,1000_QL80_.jpg"
+  }
+>>>>>>> f11d90cc24b5bfb4326422e47cec1c922157c17b
+]
