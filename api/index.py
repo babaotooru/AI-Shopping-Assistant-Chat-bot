@@ -1,5 +1,13 @@
-"""Vercel Python entrypoint for FastAPI app."""
+from fastapi import FastAPI
 
-from backend.main import app
+app = FastAPI()
 
-# Vercel looks for a top-level ASGI app object named `app`.
+
+@app.get("/")
+def home():
+	return {"message": "AI Shopping Assistant Backend Running!"}
+
+
+@app.get("/health")
+def health():
+	return {"status": "ok"}
