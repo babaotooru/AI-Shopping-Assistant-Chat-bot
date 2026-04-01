@@ -35,6 +35,8 @@ class Settings:
     SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
     SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "")
     SUPABASE_DB_URL: str = os.getenv("SUPABASE_DB_URL", "")
+    SUPABASE_TABLE: str = os.getenv("SUPABASE_TABLE", "orders")
+    USE_SUPABASE: bool = os.getenv("USE_SUPABASE", "false").lower() == "true"
     
     # CORS
     CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:8000", "http://localhost:5173"]

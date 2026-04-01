@@ -2,6 +2,7 @@
 Chat/Query Schema Models
 """
 from pydantic import BaseModel
+from pydantic import Field
 from typing import Optional
 
 class ChatQuery(BaseModel):
@@ -35,3 +36,4 @@ class ComparisonResponse(BaseModel):
     product1: str
     product2: str
     comparison: str
+    compared_products: list[dict] = Field(default_factory=list)

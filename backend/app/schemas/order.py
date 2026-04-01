@@ -14,6 +14,16 @@ class OrderBase(BaseModel):
     price: str
     rating: float
     image_link: Optional[str] = None
+    original_price: Optional[str] = None
+    discount_percentage: Optional[float] = None
+    total_reviews: Optional[float] = None
+    purchased_last_month: Optional[float] = None
+    is_best_seller: Optional[str] = None
+    is_sponsored: Optional[str] = None
+    has_coupon: Optional[str] = None
+    buy_box_availability: Optional[str] = None
+    sustainability_tags: Optional[str] = None
+    product_page_url: Optional[str] = None
 
 class OrderCreate(OrderBase):
     """Order Creation Schema"""

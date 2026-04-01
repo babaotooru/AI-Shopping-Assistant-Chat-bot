@@ -1,7 +1,7 @@
 import apiClient from './api';
 
 export const orderService = {
-  getAllOrders: async (category = null, skip = 0, limit = 10) => {
+  getAllOrders: async (category = null, skip = 0, limit = 100) => {
     const response = await apiClient.get('/orders', {
       params: { category, skip, limit }
     });
@@ -30,6 +30,13 @@ export const orderService = {
 
   getCategories: async () => {
     const response = await apiClient.get('/orders/categories/list');
+    return response.data;
+  },
+
+  getProductSuggestions: async (query = '', limit = 8) => {
+    const response = await apiClient.get('/orders/search/suggestions', {
+      params: { q: query, limit },
+    });
     return response.data;
   },
 };

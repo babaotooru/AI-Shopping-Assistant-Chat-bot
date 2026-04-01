@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # AI Shopping Assistant (FastAPI + React)
 
 Production-style full-stack shopping assistant with:
@@ -40,21 +39,3 @@ Create a .env file in project root and set at least:
 
 Optional:
 - ORDERS_FILE (absolute path override for orders dataset)
-=======
-# 🛍️ E-Commerce AI Assistant (Streamlit + LangChain + Groq)
-
-An interactive E-Commerce assistant built with **Streamlit**, **LangChain**, **Groq (Llama3)**, and **Google Generative AI Embeddings**.
-
-## 🚀 Features
-- View your orders visually  
-- Chat with an AI Order Assistant  
-- Get personalized product recommendations  
-- Compare two products intelligently  
-
----
-
-## ⚙️ Run Locally
-```bash
-pip install -r requirements.txt
-streamlit run main.py
->>>>>>> f11d90cc24b5bfb4326422e47cec1c922157c17b

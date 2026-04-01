@@ -6,6 +6,7 @@ import { OrdersPage } from './pages/OrdersPage';
 import { ChatPage } from './pages/ChatPage';
 import { RecommendationsPage } from './pages/RecommendationsPage';
 import { ComparePage } from './pages/ComparePage';
+import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import './App.css';
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
                         <Route path="/chat" element={<ChatPage />} />
                         <Route path="/recommendations" element={<RecommendationsPage />} />
                         <Route path="/compare" element={<ComparePage />} />
+                        <Route path="/products/:productId" element={<ProductDetailsPage />} />
                     </Routes>
                 </main>
             </div>

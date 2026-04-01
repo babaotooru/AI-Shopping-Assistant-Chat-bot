@@ -14,7 +14,7 @@ router = APIRouter()
 async def get_all_orders(
     category: Optional[str] = Query(None, description="Filter by category"),
     skip: int = Query(0, ge=0),
-    limit: int = Query(10, ge=1, le=100)
+    limit: int = Query(100, ge=1, le=500)
 ) -> OrderListResponse:
     """
     Get all orders with optional filtering and pagination
@@ -42,14 +42,73 @@ async def get_all_orders(
 
 @router.get("/categories/list")
 async def get_categories() -> dict:
-    """Get all unique categories"""
+    """Get categories present in current orders data."""
     try:
         orders = order_service.get_all_orders()
-        categories = list(set(o.get('category', 'Unknown') for o in orders))
-        return {"categories": sorted(categories)}
+        categories = sorted(set(o.get('category', 'Unknown') for o in orders if o.get('category')))
+        return {"categories": categories}
     except Exception as e:
         logger.error(f"Error fetching categories: {str(e)}")
         raise HTTPException(status_code=500, detail="Error fetching categories")
+
+@router.get("/search/suggestions")
+async def get_product_suggestions(
+    q: Optional[str] = Query("", description="Search query for product name/category"),
+    limit: int = Query(8, ge=1, le=20)
+) -> dict:
+    """Get search suggestions from product names in sales data."""
+    try:
+        orders = order_service.get_all_orders()
+        query = (q or "").strip().lower()
+
+        if query:
+            ranked = []
+            for order in orders:
+                name = str(order.get("name", ""))
+                category = str(order.get("category", ""))
+                name_lower = name.lower()
+                category_lower = category.lower()
+
+                score = 0
+                if name_lower.startswith(query):
+                    score += 6
+                if query in name_lower:
+                    score += 4
+                if query in category_lower:
+                    score += 2
+
+                if score > 0:
+                    ranked.append((score, order))
+
+            ranked.sort(key=lambda item: (item[0], float(item[1].get("rating", 0) or 0), float(item[1].get("total_reviews", 0) or 0)), reverse=True)
+            matched_orders = [item[1] for item in ranked]
+        else:
+            matched_orders = sorted(
+                orders,
+                key=lambda item: (float(item.get("rating", 0) or 0), float(item.get("total_reviews", 0) or 0)),
+                reverse=True,
+            )
+
+        suggestions = []
+        for order in matched_orders[:limit]:
+            suggestions.append({
+                "product_id": order.get("product_id"),
+                "name": order.get("name"),
+                "category": order.get("category"),
+                "price": order.get("price"),
+                "rating": order.get("rating"),
+                "total_reviews": order.get("total_reviews"),
+            })
+
+        return {
+            "query": q or "",
+            "total_products": len(orders),
+            "matched_products": len(matched_orders),
+            "suggestions": suggestions,
+        }
+    except Exception as e:
+        logger.error(f"Error getting suggestions: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error getting product suggestions")
 
 @router.get("/{product_id}", response_model=OrderResponse)
 async def get_order(product_id: str) -> OrderResponse:
