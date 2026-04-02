@@ -21,19 +21,35 @@ def health():
     return {"status": "healthy", "message": "All systems operational"}
 
 
+def _build_product_id(product: dict) -> str:
+    product_id = str(product.get("product_id") or "").strip()
+    if product_id:
+        return product_id
+
+    product_page_url = str(product.get("product_page_url") or "").strip()
+    match = re.search(r"/dp/([A-Z0-9]{8,14})", product_page_url)
+    if match:
+        return f"AMZ-{match.group(1)}"
+
+    title = str(product.get("name") or product.get("product_title") or "product").lower()
+    slug = re.sub(r"[^a-z0-9]+", "-", title).strip("-")
+    return f"AMZ-{slug[:18] or 'product'}"
+
+
 def _normalize_order(product: dict) -> dict:
+    product_id = _build_product_id(product)
     return {
-        "name": product["name"],
-        "product_id": product["product_id"],
-        "category": product["category"],
-        "order_placed_date": product.get("order_placed_date", "2026-04-01"),
-        "expected_delivery_date": product.get("expected_delivery_date", "2026-04-01"),
-        "price": product["price"],
-        "rating": product["rating"],
+        "name": str(product.get("name") or product.get("product_title") or "Unknown Product").strip(),
+        "product_id": product_id,
+        "category": str(product.get("category") or product.get("product_category") or "N/A").strip(),
+        "order_placed_date": product.get("order_placed_date") or product.get("data_collected_at") or "2026-04-01",
+        "expected_delivery_date": product.get("expected_delivery_date") or product.get("delivery_date") or product.get("order_placed_date") or "2026-04-01",
+        "price": product.get("price") or _to_inr_label(product.get("discounted_price") or product.get("original_price")),
+        "rating": float(product.get("rating") or product.get("product_rating") or 0.0),
         "image_link": product.get("image_link", ""),
-        "original_price": product.get("original_price", "N/A"),
+        "original_price": product.get("original_price") or _to_inr_label(product.get("original_price")),
         "discount_percentage": product.get("discount_percentage", 0.0),
-        "total_reviews": product.get("reviews", 0),
+        "total_reviews": product.get("reviews", product.get("total_reviews", 0)),
         "purchased_last_month": product.get("purchased_last_month", 0),
         "is_best_seller": product.get("is_best_seller", "No Badge"),
         "is_sponsored": product.get("is_sponsored", "Organic"),
@@ -85,9 +101,12 @@ def _load_products() -> list[dict]:
     with open(csv_path, "r", encoding="utf-8", newline="") as file_handle:
         reader = csv.DictReader(file_handle)
         for row in reader:
+            product_page_url = row.get("product_page_url", "")
+            name = row.get("product_title", "Unknown Product")
             products.append(
                 {
-                    "name": row.get("product_title", "Unknown Product"),
+                    "name": name,
+                    "product_id": _build_product_id({"name": name, "product_page_url": product_page_url}),
                     "category": row.get("product_category", "N/A"),
                     "rating": _to_float(row.get("product_rating")),
                     "reviews": int(_to_float(row.get("total_reviews"))),
@@ -96,7 +115,15 @@ def _load_products() -> list[dict]:
                     "price": _to_inr_label(row.get("discounted_price")),
                     "original_price": _to_inr_label(row.get("original_price")),
                     "discount_percentage": _to_float(row.get("discount_percentage")),
-                    "product_page_url": row.get("product_page_url", ""),
+                    "image_link": row.get("product_image_url", ""),
+                    "order_placed_date": row.get("data_collected_at", "2026-04-01"),
+                    "expected_delivery_date": row.get("delivery_date", row.get("data_collected_at", "2026-04-01")),
+                    "is_best_seller": row.get("is_best_seller", "No Badge"),
+                    "is_sponsored": row.get("is_sponsored", "Organic"),
+                    "has_coupon": row.get("has_coupon", "No Coupon"),
+                    "buy_box_availability": row.get("buy_box_availability", "Add to cart"),
+                    "sustainability_tags": row.get("sustainability_tags", ""),
+                    "product_page_url": product_page_url,
                 }
             )
 
