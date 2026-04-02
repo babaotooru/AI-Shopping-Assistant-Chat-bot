@@ -21,6 +21,29 @@ def health():
     return {"status": "ok"}
 
 
+def _normalize_order(product: dict) -> dict:
+    return {
+        "name": product["name"],
+        "product_id": product["product_id"],
+        "category": product["category"],
+        "order_placed_date": product.get("order_placed_date", "2026-04-01"),
+        "expected_delivery_date": product.get("expected_delivery_date", "2026-04-01"),
+        "price": product["price"],
+        "rating": product["rating"],
+        "image_link": product.get("image_link", ""),
+        "original_price": product.get("original_price", "N/A"),
+        "discount_percentage": product.get("discount_percentage", 0.0),
+        "total_reviews": product.get("reviews", 0),
+        "purchased_last_month": product.get("purchased_last_month", 0),
+        "is_best_seller": product.get("is_best_seller", "No Badge"),
+        "is_sponsored": product.get("is_sponsored", "Organic"),
+        "has_coupon": product.get("has_coupon", "No Coupon"),
+        "buy_box_availability": product.get("buy_box_availability", "Add to cart"),
+        "sustainability_tags": product.get("sustainability_tags", ""),
+        "product_page_url": product.get("product_page_url", ""),
+    }
+
+
 class ChatRequest(BaseModel):
     query: str
 
@@ -189,18 +212,116 @@ def _build_compare_response(product1: str, product2: str) -> dict:
     }
 
 
+def _build_orders_response(category: str | None = None, skip: int = 0, limit: int = 100) -> dict:
+    products = _load_products()
+    if category:
+        filtered = [product for product in products if str(product.get("category", "")).lower() == category.lower()]
+    else:
+        filtered = products
+
+    orders = [_normalize_order(product) for product in filtered[skip: skip + limit]]
+    return {
+        "total": len(filtered),
+        "orders": orders,
+    }
+
+
+def _build_order_by_id(product_id: str) -> dict | None:
+    for product in _load_products():
+        if product.get("product_id") == product_id:
+            return _normalize_order(product)
+    return None
+
+
+def _build_categories() -> dict:
+    products = _load_products()
+    categories = sorted({str(product.get("category", "")).strip() for product in products if product.get("category")})
+    return {"categories": categories}
+
+
+def _build_suggestions(query: str = "", limit: int = 8) -> dict:
+    products = _load_products()
+    if query.strip():
+        ranked = _rank_products(query, products, limit=limit)
+    else:
+        ranked = sorted(products, key=lambda product: (float(product.get("rating", 0)), float(product.get("reviews", 0))), reverse=True)[:limit]
+
+    suggestions = []
+    for product in ranked:
+        suggestions.append(
+            {
+                "product_id": product.get("product_id"),
+                "name": product.get("name"),
+                "category": product.get("category"),
+                "price": product.get("price"),
+                "rating": product.get("rating"),
+                "total_reviews": product.get("reviews"),
+            }
+        )
+
+    return {
+        "query": query,
+        "total_products": len(products),
+        "matched_products": len(ranked),
+        "suggestions": suggestions,
+    }
+
+
 def _register_routes(prefix: str) -> None:
+    @router.get(f"{prefix}/health")
+    def prefixed_health():
+        return {"status": "ok"}
+
+    @router.get(f"{prefix}/orders")
+    def get_all_orders(category: str | None = None, skip: int = 0, limit: int = 100):
+        return _build_orders_response(category=category, skip=skip, limit=limit)
+
+    @router.get(f"{prefix}/orders/categories/list")
+    def get_categories():
+        return _build_categories()
+
+    @router.get(f"{prefix}/orders/search/suggestions")
+    def get_product_suggestions(q: str = "", limit: int = 8):
+        return _build_suggestions(query=q, limit=limit)
+
+    @router.get(f"{prefix}/orders/{{product_id}}")
+    def get_order(product_id: str):
+        order = _build_order_by_id(product_id)
+        if not order:
+            return {"detail": "Order not found"}
+        return order
+
     @router.post(f"{prefix}/chat")
     def chat(req: ChatRequest):
+        return _build_chat_response(req.query)
+
+    @router.post(f"{prefix}/chat/query")
+    def chat_query(req: ChatRequest):
         return _build_chat_response(req.query)
 
     @router.post(f"{prefix}/recommend")
     def recommend(req: RecommendRequest):
         return _build_recommend_response(req.product)
 
+    @router.post(f"{prefix}/chat/recommend")
+    def chat_recommend(req: RecommendRequest):
+        return _build_recommend_response(req.product)
+
     @router.post(f"{prefix}/compare")
     def compare(req: CompareRequest):
         return _build_compare_response(req.product1, req.product2)
+
+    @router.post(f"{prefix}/chat/compare")
+    def chat_compare(req: CompareRequest):
+        return _build_compare_response(req.product1, req.product2)
+
+    @router.post(f"{prefix}/chat/process-orders")
+    def process_orders():
+        return {
+            "status": "success",
+            "message": "Orders processed successfully",
+            "orders_count": len(_load_products()),
+        }
 
 
 _register_routes("")
