@@ -18,7 +18,7 @@ def home():
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "healthy", "message": "All systems operational"}
 
 
 def _normalize_order(product: dict) -> dict:
@@ -270,7 +270,7 @@ def _build_suggestions(query: str = "", limit: int = 8) -> dict:
 def _register_routes(prefix: str) -> None:
     @router.get(f"{prefix}/health")
     def prefixed_health():
-        return {"status": "ok"}
+        return {"status": "healthy", "message": "All systems operational"}
 
     @router.get(f"{prefix}/orders")
     def get_all_orders(category: str | None = None, skip: int = 0, limit: int = 100):
