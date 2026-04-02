@@ -12,12 +12,12 @@ export function Navigation({ theme, onToggleTheme }) {
     ];
 
     return (
-        <nav className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg">
+        <nav className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg sticky top-0 z-40">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-16">
-                    <Link to="/" className="flex items-center space-x-2 font-bold text-xl">
+                <div className="flex justify-between items-center h-14 sm:h-16">
+                    <Link to="/" className="flex items-center space-x-2 font-bold text-lg sm:text-xl min-w-0">
                         <span className="text-2xl">🛍️</span>
-                        <span>AI Shopping Assistant</span>
+                        <span className="truncate">AI Shopping Assistant</span>
                     </Link>
 
                     <button
@@ -52,6 +52,24 @@ export function Navigation({ theme, onToggleTheme }) {
                         >
                             {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
                         </button>
+                    </div>
+                </div>
+
+                <div className="md:hidden -mx-4 px-4 pb-3 overflow-x-auto">
+                    <div className="flex items-center gap-2 min-w-max">
+                        {navItems.map((item) => (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${location.pathname === item.path
+                                    ? 'bg-white/30'
+                                    : 'bg-white/10 hover:bg-white/20'
+                                    }`}
+                            >
+                                <span className="mr-1">{item.icon}</span>
+                                {item.label}
+                            </Link>
+                        ))}
                     </div>
                 </div>
             </div>

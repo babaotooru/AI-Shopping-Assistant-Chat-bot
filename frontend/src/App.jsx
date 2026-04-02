@@ -33,7 +33,7 @@ function App() {
         <BrowserRouter>
             <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
                 <Navigation theme={theme} onToggleTheme={toggleTheme} />
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
                     <Routes>
                         <Route path="/" element={<HomePage />} />
                         <Route path="/orders" element={<OrdersPage />} />

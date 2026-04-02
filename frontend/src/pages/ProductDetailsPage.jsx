@@ -72,7 +72,7 @@ export function ProductDetailsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div>
-                    <h1 className="text-3xl font-bold">Product Details</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold">Product Details</h1>
                     <p className="text-slate-600 dark:text-slate-300">Complete Amazon sales data view for this product.</p>
                 </div>
                 <Link to="/orders" className="px-4 py-2 rounded border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">
@@ -111,10 +111,10 @@ export function ProductDetailsPage() {
                     </div>
                 </div>
 
-                <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-5">
+                <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4 sm:p-6 space-y-5">
                     <div>
                         <p className="text-xs uppercase tracking-wide font-semibold text-slate-500">{product.category}</p>
-                        <h2 className="text-2xl font-bold mt-1">{product.name}</h2>
+                        <h2 className="text-xl sm:text-2xl font-bold mt-1 break-words">{product.name}</h2>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -149,7 +149,7 @@ export function ProductDetailsPage() {
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4 sm:p-6 space-y-4">
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                     <h3 className="text-xl font-bold">Related Products</h3>
                     <p className="text-xs text-slate-500">{sortedRelated.length} products</p>

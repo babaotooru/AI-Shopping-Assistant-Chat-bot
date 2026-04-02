@@ -7,7 +7,7 @@ export function OrdersPage() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-4xl font-bold mb-2">📦 My Orders</h1>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">📦 My Orders</h1>
                 <p className="text-slate-600 dark:text-slate-300">Manage and track all your orders</p>
             </div>
 
@@ -18,7 +18,7 @@ export function OrdersPage() {
 
                 <div className="lg:col-span-1">
                     {selectedOrder && (
-                        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden h-fit sticky top-20 shadow-lg">
+                        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden h-fit shadow-lg lg:sticky lg:top-20">
                             {/* Product Image */}
                             <div className="relative bg-slate-100 dark:bg-slate-800 p-4">
                                 {selectedOrder.image_link && (
@@ -33,7 +33,7 @@ export function OrdersPage() {
                                 )}
                             </div>
 
-                            <div className="p-6 space-y-4">
+                            <div className="p-4 sm:p-6 space-y-4">
                                 {/* Category Badge */}
                                 <div>
                                     <span className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-xs font-bold uppercase">
@@ -42,7 +42,7 @@ export function OrdersPage() {
                                 </div>
 
                                 {/* Title */}
-                                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
                                     {selectedOrder.name}
                                 </h2>
 
