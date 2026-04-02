@@ -299,6 +299,43 @@ def _build_compare_response(product1: str, product2: str) -> dict:
     if first_price == second_price:
         winner_price = "Tie"
 
+    first_reviews = int(first.get("reviews", 0) or 0)
+    second_reviews = int(second.get("reviews", 0) or 0)
+    review_winner = first["name"] if first_reviews > second_reviews else second["name"]
+    if first_reviews == second_reviews:
+        review_winner = "Tie"
+
+    first_discount = float(first.get("discount_percentage", 0) or 0)
+    second_discount = float(second.get("discount_percentage", 0) or 0)
+    discount_winner = first["name"] if first_discount > second_discount else second["name"]
+    if first_discount == second_discount:
+        discount_winner = "Tie"
+
+    value_score_first = (float(first.get("rating", 0) or 0) * 20.0) - (first_price / 10.0)
+    value_score_second = (float(second.get("rating", 0) or 0) * 20.0) - (second_price / 10.0)
+    value_winner = first["name"] if value_score_first > value_score_second else second["name"]
+    if abs(value_score_first - value_score_second) < 0.001:
+        value_winner = "Tie"
+
+    comparison_text = "\n".join(
+        [
+            f"Compared Product A: {first['name']}",
+            f"Compared Product B: {second['name']}",
+            "",
+            f"Price (INR): {first.get('price', 'N/A')} vs {second.get('price', 'N/A')}",
+            f"Rating: {first.get('rating', 0)} vs {second.get('rating', 0)}",
+            f"Reviews: {first_reviews:,} vs {second_reviews:,}",
+            f"Discount: {first_discount:.2f}% vs {second_discount:.2f}%",
+            f"Purchased Last Month: {int(first.get('purchased_last_month', 0) or 0):,} vs {int(second.get('purchased_last_month', 0) or 0):,}",
+            "",
+            f"Winner by Rating: {winner_rating}",
+            f"Winner by Price: {winner_price}",
+            f"Winner by Reviews: {review_winner}",
+            f"Winner by Discount: {discount_winner}",
+            f"Best Overall Value: {value_winner}",
+        ]
+    )
+
     compared_products = [
         {
             **first,
@@ -339,11 +376,14 @@ def _build_compare_response(product1: str, product2: str) -> dict:
     return {
         "product1": left_query,
         "product2": right_query,
-        "comparison": "Comparison generated from sales dataset.",
+        "comparison": comparison_text,
         "compared_products": compared_products,
         "result": "Comparison generated from sales dataset.",
         "winner_rating": winner_rating,
         "winner_price": winner_price,
+        "winner_reviews": review_winner,
+        "winner_discount": discount_winner,
+        "winner_value": value_winner,
         "details": {
             "product1": first,
             "product2": second,
