@@ -1,5 +1,6 @@
 from fastapi import APIRouter, FastAPI
 from pydantic import BaseModel
+from typing import Optional
 from functools import lru_cache
 from pathlib import Path
 import csv
@@ -61,16 +62,30 @@ def _normalize_order(product: dict) -> dict:
 
 
 class ChatRequest(BaseModel):
-    query: str
+    query: Optional[str] = None
+    question: Optional[str] = None
+
+    def get_query(self) -> str:
+        return (self.query or self.question or "").strip()
 
 
 class CompareRequest(BaseModel):
-    product1: str
-    product2: str
+    product1: Optional[str] = None
+    product2: Optional[str] = None
+
+    def get_product1(self) -> str:
+        return (self.product1 or "").strip()
+
+    def get_product2(self) -> str:
+        return (self.product2 or "").strip()
 
 
 class RecommendRequest(BaseModel):
-    product: str
+    product: Optional[str] = None
+    product_name: Optional[str] = None
+
+    def get_product(self) -> str:
+        return (self.product or self.product_name or "").strip()
 
 
 def _to_float(value: str | None) -> float:
@@ -161,9 +176,12 @@ def _build_chat_response(query: str) -> dict:
 
     if not ranked:
         return {
+            "question": query,
             "user_query": query,
+            "answer": "No matching products found in catalog. Try a category or product keyword.",
             "response": "No matching products found in catalog. Try a category or product keyword.",
             "matches": [],
+            "confidence": 0.8,
         }
 
     lines = []
@@ -171,43 +189,98 @@ def _build_chat_response(query: str) -> dict:
         lines.append(f"{item['name']} | {item['category']} | Rating {item['rating']} | {item['price']}")
 
     return {
+        "question": query,
         "user_query": query,
+        "answer": "Top matches from your product sales data:\n" + "\n".join(lines),
         "response": "Top matches from your product sales data:",
         "matches": lines,
+        "confidence": 0.85,
     }
 
 
 def _build_recommend_response(product_name: str) -> dict:
+    normalized_name = (product_name or "").strip()
+    if not normalized_name:
+        return {
+            "product_name": "",
+            "product": "",
+            "recommendations": [],
+            "items": [],
+            "recommendation": "No recommendations found.",
+        }
+
     products = _load_products()
-    ranked = _rank_products(product_name, products, limit=6)
+    ranked = _rank_products(normalized_name, products, limit=6)
 
     if not ranked:
         return {
-            "product": product_name,
+            "product_name": normalized_name,
+            "product": normalized_name,
             "recommendation": "No recommendations found.",
+            "recommendations": [],
             "items": [],
         }
 
     searched = ranked[0]
-    recs = ranked[1:6]
+    searched_entry = {
+        **searched,
+        "details": {
+            "reviews": searched.get("reviews"),
+            "discount_percentage": searched.get("discount_percentage"),
+            "purchased_last_month": searched.get("purchased_last_month"),
+        },
+        "match_type": "exact",
+    }
+
+    recs = []
+    for item in ranked[1:6]:
+        recs.append(
+            {
+                **item,
+                "details": {
+                    "reviews": item.get("reviews"),
+                    "discount_percentage": item.get("discount_percentage"),
+                    "purchased_last_month": item.get("purchased_last_month"),
+                },
+            }
+        )
+
+    recommendations_payload = [{"searched_product": searched_entry}, *recs]
 
     return {
-        "product": product_name,
+        "product_name": normalized_name,
+        "product": normalized_name,
         "recommendation": f"Best match: {searched['name']}",
-        "searched_product": searched,
+        "recommendations": recommendations_payload,
+        "searched_product": searched_entry,
         "items": recs,
     }
 
 
 def _build_compare_response(product1: str, product2: str) -> dict:
+    left_query = (product1 or "").strip()
+    right_query = (product2 or "").strip()
+    if not left_query or not right_query:
+        return {
+            "product1": left_query,
+            "product2": right_query,
+            "comparison": "Both products are required.",
+            "compared_products": [],
+            "result": "One or both products were not found.",
+            "winner_rating": "N/A",
+            "winner_price": "N/A",
+        }
+
     products = _load_products()
-    first_list = _rank_products(product1, products, limit=1)
-    second_list = _rank_products(product2, products, limit=1)
+    first_list = _rank_products(left_query, products, limit=1)
+    second_list = _rank_products(right_query, products, limit=1)
 
     if not first_list or not second_list:
         return {
-            "product1": product1,
-            "product2": product2,
+            "product1": left_query,
+            "product2": right_query,
+            "comparison": "One or both products were not found.",
+            "compared_products": [],
             "result": "One or both products were not found.",
             "winner_rating": "N/A",
             "winner_price": "N/A",
@@ -226,9 +299,32 @@ def _build_compare_response(product1: str, product2: str) -> dict:
     if first_price == second_price:
         winner_price = "Tie"
 
+    compared_products = [
+        {
+            **first,
+            "match_type": "exact",
+            "details": {
+                "reviews": first.get("reviews"),
+                "discount_percentage": first.get("discount_percentage"),
+                "purchased_last_month": first.get("purchased_last_month"),
+            },
+        },
+        {
+            **second,
+            "match_type": "exact",
+            "details": {
+                "reviews": second.get("reviews"),
+                "discount_percentage": second.get("discount_percentage"),
+                "purchased_last_month": second.get("purchased_last_month"),
+            },
+        },
+    ]
+
     return {
-        "product1": product1,
-        "product2": product2,
+        "product1": left_query,
+        "product2": right_query,
+        "comparison": "Comparison generated from sales dataset.",
+        "compared_products": compared_products,
         "result": "Comparison generated from sales dataset.",
         "winner_rating": winner_rating,
         "winner_price": winner_price,
@@ -320,27 +416,27 @@ def _register_routes(prefix: str) -> None:
 
     @router.post(f"{prefix}/chat")
     def chat(req: ChatRequest):
-        return _build_chat_response(req.query)
+        return _build_chat_response(req.get_query())
 
     @router.post(f"{prefix}/chat/query")
     def chat_query(req: ChatRequest):
-        return _build_chat_response(req.query)
+        return _build_chat_response(req.get_query())
 
     @router.post(f"{prefix}/recommend")
     def recommend(req: RecommendRequest):
-        return _build_recommend_response(req.product)
+        return _build_recommend_response(req.get_product())
 
     @router.post(f"{prefix}/chat/recommend")
     def chat_recommend(req: RecommendRequest):
-        return _build_recommend_response(req.product)
+        return _build_recommend_response(req.get_product())
 
     @router.post(f"{prefix}/compare")
     def compare(req: CompareRequest):
-        return _build_compare_response(req.product1, req.product2)
+        return _build_compare_response(req.get_product1(), req.get_product2())
 
     @router.post(f"{prefix}/chat/compare")
     def chat_compare(req: CompareRequest):
-        return _build_compare_response(req.product1, req.product2)
+        return _build_compare_response(req.get_product1(), req.get_product2())
 
     @router.post(f"{prefix}/chat/process-orders")
     def process_orders():

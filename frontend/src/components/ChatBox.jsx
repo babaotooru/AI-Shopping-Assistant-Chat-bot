@@ -34,7 +34,13 @@ export function ChatBox() {
         try {
             setLoading(true);
             const response = await chatService.queryOrders(input);
-            addMessage('bot', response.answer);
+            const reply =
+                response?.answer ||
+                response?.response ||
+                (Array.isArray(response?.matches) && response.matches.length > 0
+                    ? response.matches.join('\n')
+                    : 'I found your request but could not format a detailed answer.');
+            addMessage('bot', reply);
         } catch (err) {
             setError(err.message);
             addMessage('bot', 'Error processing your request. Please try again.');
