@@ -34,6 +34,14 @@ function extractNumericPrice(value, usdFallback = null) {
     return String(value ?? '').toUpperCase().startsWith('INR') ? amount : amount * INR_RATE;
 }
 
+function pickDetail(item, key, fallback = 'N/A') {
+    const value = item?.details?.[key] ?? item?.[key];
+    if (value === null || value === undefined || value === '') {
+        return fallback;
+    }
+    return value;
+}
+
 export function ComparisonPanel() {
     const navigate = useNavigate();
     const [product1, setProduct1] = useState('');
@@ -504,12 +512,34 @@ export function ComparisonPanel() {
                             <h4 className="font-bold line-clamp-2">{item.name}</h4>
                             <p className="text-sm">Rating: <span className="font-semibold text-yellow-500">{item.rating} ★</span></p>
                             <p className="text-sm">Price: <span className="font-semibold text-orange-500">{toInrLabel(item.price, item.price_usd)}</span></p>
+                            <p className="text-sm">Original: <span className="font-semibold text-slate-600 dark:text-slate-200">{pickDetail(item, 'original_price', item.original_price || 'N/A')}</span></p>
 
                             <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-slate-300 border-t border-b border-slate-200 dark:border-slate-700 py-2">
                                 <p>Reviews: <span className="font-semibold">{item.details?.reviews || item.reviews ? Number(item.details?.reviews || item.reviews).toLocaleString() : 'N/A'}</span></p>
                                 <p>Discount: <span className="font-semibold">{item.details?.discount_percentage || item.discount_percentage ? `${item.details?.discount_percentage || item.discount_percentage}%` : '0%'}</span></p>
                                 <p>Last Month: <span className="font-semibold">{item.details?.purchased_last_month || item.purchased_last_month ? Number(item.details?.purchased_last_month || item.purchased_last_month).toLocaleString() : 'N/A'}</span></p>
                                 <p>Delivery: <span className="font-semibold">{item.details?.expected_delivery_date || item.expected_delivery_date || 'N/A'}</span></p>
+                            </div>
+
+                            <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-slate-50 dark:bg-slate-900/50">
+                                <p className="text-xs font-extrabold uppercase tracking-wide text-slate-500 mb-2">Complete Product Details</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-700 dark:text-slate-300">
+                                    <p>Product ID: <span className="font-semibold break-all">{pickDetail(item, 'product_id')}</span></p>
+                                    <p>Category: <span className="font-semibold">{pickDetail(item, 'category')}</span></p>
+                                    <p>Price (INR): <span className="font-semibold">{toInrLabel(item.price, item.price_usd)}</span></p>
+                                    <p>Price (USD): <span className="font-semibold">{item.price_usd ?? 'N/A'}</span></p>
+                                    <p>Rating: <span className="font-semibold">{pickDetail(item, 'rating')}</span></p>
+                                    <p>Reviews: <span className="font-semibold">{item.details?.reviews || item.reviews ? Number(item.details?.reviews || item.reviews).toLocaleString() : 'N/A'}</span></p>
+                                    <p>Discount: <span className="font-semibold">{item.details?.discount_percentage || item.discount_percentage ? `${item.details?.discount_percentage || item.discount_percentage}%` : '0%'}</span></p>
+                                    <p>Purchased Last Month: <span className="font-semibold">{item.details?.purchased_last_month || item.purchased_last_month ? Number(item.details?.purchased_last_month || item.purchased_last_month).toLocaleString() : 'N/A'}</span></p>
+                                    <p>Best Seller: <span className="font-semibold">{pickDetail(item, 'is_best_seller', 'No Badge')}</span></p>
+                                    <p>Sponsored: <span className="font-semibold">{pickDetail(item, 'is_sponsored', 'Organic')}</span></p>
+                                    <p>Coupon: <span className="font-semibold">{pickDetail(item, 'has_coupon', 'No Coupon')}</span></p>
+                                    <p>Buy Box: <span className="font-semibold">{pickDetail(item, 'buy_box_availability')}</span></p>
+                                    <p>Sustainability: <span className="font-semibold">{pickDetail(item, 'sustainability_tags')}</span></p>
+                                    <p>Order Date: <span className="font-semibold">{pickDetail(item, 'order_placed_date')}</span></p>
+                                    <p>Expected Delivery: <span className="font-semibold">{pickDetail(item, 'expected_delivery_date')}</span></p>
+                                </div>
                             </div>
 
                             <div className="flex flex-wrap gap-2">
