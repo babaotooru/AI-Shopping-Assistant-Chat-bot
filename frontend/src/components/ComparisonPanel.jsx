@@ -479,6 +479,19 @@ export function ComparisonPanel() {
                             className={`bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 space-y-3 ${reduceMotion ? '' : 'transition-all duration-500'} ${showComparedCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
                             style={{ transitionDelay: reduceMotion ? '0ms' : `${idx * 100}ms` }}
                         >
+                            {item.image_link && (
+                                <div className="relative overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-700 h-40">
+                                    <img
+                                        src={item.image_link}
+                                        alt={item.name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.currentTarget.src = 'https://via.placeholder.com/320x180?text=No+Image';
+                                        }}
+                                    />
+                                </div>
+                            )}
+
                             <div className="flex items-center justify-between gap-2 flex-wrap">
                                 <p className="text-xs uppercase font-semibold text-slate-500">{item.category}</p>
                                 <span className={`text-xs px-3 py-1.5 rounded-full font-extrabold tracking-wide ${item.match_type === 'exact'
@@ -491,7 +504,26 @@ export function ComparisonPanel() {
                             <h4 className="font-bold line-clamp-2">{item.name}</h4>
                             <p className="text-sm">Rating: <span className="font-semibold text-yellow-500">{item.rating} ★</span></p>
                             <p className="text-sm">Price: <span className="font-semibold text-orange-500">{toInrLabel(item.price, item.price_usd)}</span></p>
-                            <p className="text-xs text-slate-500">Reviews: {item.details?.reviews ? Number(item.details.reviews).toLocaleString() : 'N/A'}</p>
+
+                            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-slate-300 border-t border-b border-slate-200 dark:border-slate-700 py-2">
+                                <p>Reviews: <span className="font-semibold">{item.details?.reviews || item.reviews ? Number(item.details?.reviews || item.reviews).toLocaleString() : 'N/A'}</span></p>
+                                <p>Discount: <span className="font-semibold">{item.details?.discount_percentage || item.discount_percentage ? `${item.details?.discount_percentage || item.discount_percentage}%` : '0%'}</span></p>
+                                <p>Last Month: <span className="font-semibold">{item.details?.purchased_last_month || item.purchased_last_month ? Number(item.details?.purchased_last_month || item.purchased_last_month).toLocaleString() : 'N/A'}</span></p>
+                                <p>Delivery: <span className="font-semibold">{item.details?.expected_delivery_date || item.expected_delivery_date || 'N/A'}</span></p>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                                {(item.details?.is_best_seller || item.is_best_seller) && String(item.details?.is_best_seller || item.is_best_seller).toLowerCase() !== 'no badge' && (
+                                    <span className="text-[11px] px-2 py-1 rounded bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-300 font-semibold">⭐ {(item.details?.is_best_seller || item.is_best_seller)}</span>
+                                )}
+                                {(item.details?.has_coupon || item.has_coupon) && String(item.details?.has_coupon || item.has_coupon).toLowerCase() !== 'no coupon' && (
+                                    <span className="text-[11px] px-2 py-1 rounded bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300 font-semibold">🏷️ {(item.details?.has_coupon || item.has_coupon)}</span>
+                                )}
+                                {(item.details?.is_sponsored || item.is_sponsored) && String(item.details?.is_sponsored || item.is_sponsored).toLowerCase() !== 'organic' && (
+                                    <span className="text-[11px] px-2 py-1 rounded bg-fuchsia-100 text-fuchsia-900 dark:bg-fuchsia-900/30 dark:text-fuchsia-300 font-semibold">Sponsored</span>
+                                )}
+                            </div>
+
                             <div className="flex gap-2">
                                 {item.product_id && (
                                     <button
