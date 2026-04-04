@@ -1,4 +1,5 @@
 from fastapi import APIRouter, FastAPI, Header, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
 from functools import lru_cache
@@ -1046,6 +1047,58 @@ def _register_routes(prefix: str) -> None:
     @router.post(f"{prefix}/chat/query")
     def chat_query(req: ChatRequest):
         return _build_chat_response(req.get_query())
+
+    @router.get(f"{prefix}/chat/dashboard")
+    def chat_dashboard(selected_user_id: Optional[str] = None, authorization: Optional[str] = Header(default=None)):
+        user_id = "guest"
+        if authorization and authorization.lower().startswith("bearer "):
+            payload = _decode_access_token(authorization.split(" ", 1)[1])
+            if payload and payload.get("sub"):
+                user_id = str(payload.get("sub"))
+
+        active_user_id = str(selected_user_id or user_id)
+        return {
+            "current_user_id": user_id,
+            "selected_user_id": active_user_id,
+            "visitors": [
+                {
+                    "id": user_id,
+                    "name": "You",
+                    "email": "",
+                    "avatar_url": "",
+                    "last_message": "",
+                    "last_message_at": "",
+                }
+            ],
+            "messages": [],
+            "cart_items": [],
+            "suggested_questions": [
+                "Show me the best budget wireless earbuds under INR 5000.",
+                "Recommend top-rated products in Electronics with strong reviews.",
+                "Find alternatives similar to iPhone with lower price.",
+            ],
+        }
+
+    @router.post(f"{prefix}/chat/ask")
+    def chat_ask(req: ChatRequest):
+        query = req.get_query()
+        payload = _build_chat_response(query)
+        return {
+            "question": query,
+            "answer": payload.get("answer") or payload.get("response") or "No response",
+            "confidence": payload.get("confidence", 0.8),
+        }
+
+    @router.post(f"{prefix}/chat/ask-stream")
+    def chat_ask_stream(req: ChatRequest):
+        query = req.get_query()
+        payload = _build_chat_response(query)
+        answer_text = payload.get("answer") or payload.get("response") or "No response"
+
+        async def _streamer():
+            yield answer_text
+
+        return StreamingResponse(_streamer(), media_type="text/plain; charset=utf-8")
 
     @router.post(f"{prefix}/recommend")
     def recommend(req: RecommendRequest):

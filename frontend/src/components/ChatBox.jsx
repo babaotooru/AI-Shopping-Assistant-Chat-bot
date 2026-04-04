@@ -282,7 +282,7 @@ export function ChatBox() {
                                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                                 placeholder="Type your response and hit enter to send"
                                 disabled={loading}
-                                className="flex-1 rounded-lg border border-[#cfc5f2] bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-[#8e7bdf] disabled:opacity-50"
+                                className="flex-1 rounded-lg border border-[#cfc5f2] bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-[#8e7bdf] disabled:opacity-50"
                             />
                             <button
                                 onClick={handleSendMessage}
