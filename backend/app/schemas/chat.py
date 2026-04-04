@@ -10,6 +10,50 @@ class ChatQuery(BaseModel):
     question: str
     context: Optional[str] = None
 
+
+class ChatAskRequest(BaseModel):
+    """Chat message request for per-user conversation."""
+    question: str
+    user_id: Optional[str] = None
+    context: Optional[str] = None
+
+
+class VisitorSummary(BaseModel):
+    """Visitor/user card item for chat sidebar."""
+    id: str
+    name: str
+    email: str = ""
+    avatar_url: str = ""
+    last_message: str = ""
+    last_message_at: str = ""
+
+
+class ChatMessage(BaseModel):
+    """Chat history message."""
+    role: str
+    content: str
+    created_at: str
+
+
+class CartItem(BaseModel):
+    """Shopping cart item summary from product/order dataset."""
+    product_id: str = ""
+    name: str
+    category: str = ""
+    price: str = "N/A"
+    image_link: str = ""
+    quantity: int = 1
+
+
+class ChatDashboardData(BaseModel):
+    """Combined dashboard payload for chat page."""
+    current_user_id: str
+    selected_user_id: str
+    visitors: list[VisitorSummary]
+    messages: list[ChatMessage]
+    cart_items: list[CartItem]
+    suggested_questions: list[str]
+
 class ChatResponse(BaseModel):
     """Chat Response"""
     question: str

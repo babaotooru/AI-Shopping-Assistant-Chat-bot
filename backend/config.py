@@ -28,14 +28,32 @@ class Settings:
     # LLM APIs
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama3-70b-8192")
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
+    USE_OLLAMA: bool = os.getenv("USE_OLLAMA", "true").lower() == "true"
+    
+    # Vector DB & Embeddings
+    VECTOR_DB_TYPE: str = os.getenv("VECTOR_DB_TYPE", "faiss")  # faiss or pinecone
+    VECTOR_DB_PATH: str = os.getenv("VECTOR_DB_PATH", "./data/vector_store")
+    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+    PINECONE_API_KEY: str = os.getenv("PINECONE_API_KEY", "")
+    PINECONE_INDEX_NAME: str = os.getenv("PINECONE_INDEX_NAME", "shopping-assistant")
+    
+    # Redis Configuration
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    REDIS_USE_CONNECTION_POOL: bool = True
     
     # Database
     SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
     SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
+    SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
     SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "")
     SUPABASE_DB_URL: str = os.getenv("SUPABASE_DB_URL", "")
     SUPABASE_TABLE: str = os.getenv("SUPABASE_TABLE", "orders")
+    SUPABASE_PROFILE_TABLE: str = os.getenv("SUPABASE_PROFILE_TABLE", "profiles")
+    SUPABASE_LOGIN_AUDIT_TABLE: str = os.getenv("SUPABASE_LOGIN_AUDIT_TABLE", "login_audit")
+    SUPABASE_CHAT_MESSAGES_TABLE: str = os.getenv("SUPABASE_CHAT_MESSAGES_TABLE", "chat_messages")
     USE_SUPABASE: bool = os.getenv("USE_SUPABASE", "false").lower() == "true"
     
     # CORS

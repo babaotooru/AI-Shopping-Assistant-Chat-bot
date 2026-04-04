@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from config import settings
 from app.routes import include_routes
+from app.startup import startup_event, shutdown_event
 
 # Configure logging
 logging.basicConfig(
@@ -46,14 +47,13 @@ def create_app() -> FastAPI:
     # Include routes
     include_routes(app)
     
-    @app.on_event("startup")
-    async def startup_event():
-        logger.info(f"Starting {settings.PROJECT_NAME} application")
-        logger.info(f"Environment: {settings.APP_ENV}")
-    
-    @app.on_event("shutdown")
-    async def shutdown_event():
-        logger.info(f"Shutting down {settings.PROJECT_NAME} application")
+    # Register startup and shutdown events (compat across FastAPI versions)
+    if hasattr(app, "add_event_handler"):
+        app.add_event_handler("startup", startup_event)
+        app.add_event_handler("shutdown", shutdown_event)
+    else:
+        app.router.on_startup.append(startup_event)
+        app.router.on_shutdown.append(shutdown_event)
     
     return app
 

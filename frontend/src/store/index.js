@@ -30,11 +30,21 @@ export const useChatStore = create((set) => ({
 }));
 
 export const useAuthStore = create((set) => ({
-  user: null,
+  user: (() => {
+    const stored = localStorage.getItem('auth_user');
+    return stored ? JSON.parse(stored) : null;
+  })(),
   token: localStorage.getItem('access_token'),
   isAuthenticated: !!localStorage.getItem('access_token'),
 
-  setUser: (user) => set({ user }),
+  setUser: (user) => {
+    if (user) {
+      localStorage.setItem('auth_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('auth_user');
+    }
+    set({ user });
+  },
   setToken: (token) => {
     if (token) {
       localStorage.setItem('access_token', token);
@@ -45,6 +55,7 @@ export const useAuthStore = create((set) => ({
   },
   logout: () => {
     localStorage.removeItem('access_token');
+    localStorage.removeItem('auth_user');
     set({ user: null, token: null, isAuthenticated: false });
   },
 }));

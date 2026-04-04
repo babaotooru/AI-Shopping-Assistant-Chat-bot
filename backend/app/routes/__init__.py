@@ -2,7 +2,7 @@
 Routes initialization
 """
 from fastapi import APIRouter
-from app.routes import orders, chat, health
+from app.routes import orders, chat, health, auth
 
 def include_routes(app) -> None:
     """Include all routes in the application"""
@@ -16,5 +16,8 @@ def include_routes(app) -> None:
     
     # Chat/AI routes
     router.include_router(chat.router, prefix="/chat", tags=["chat"])
+
+    # Auth routes
+    router.include_router(auth.router, prefix="/auth", tags=["auth"])
     
     app.include_router(router)

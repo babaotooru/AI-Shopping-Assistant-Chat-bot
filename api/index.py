@@ -1,10 +1,16 @@
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, Header, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from functools import lru_cache
 from pathlib import Path
+from datetime import datetime, timedelta, timezone
 import csv
+import os
 import re
+import uuid
+import jwt
+import requests
+import bcrypt
 
 INR_RATE = 83.0
 
@@ -88,6 +94,44 @@ class RecommendRequest(BaseModel):
         return (self.product or self.product_name or "").strip()
 
 
+class SessionSyncRequest(BaseModel):
+    access_token: str
+
+
+class ResolveIdentifierRequest(BaseModel):
+    identifier: str
+
+
+class EmailSignupRequest(BaseModel):
+    email: str
+    password: str
+    username: str
+
+
+class EmailLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class ProfileUpdateRequest(BaseModel):
+    full_name: Optional[str] = None
+    username: Optional[str] = None
+    email: Optional[str] = None
+    avatar_url: Optional[str] = None
+    phone: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    bio: Optional[str] = None
+    address_line_1: Optional[str] = None
+    address_line_2: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    postal_code: Optional[str] = None
+    country: Optional[str] = None
+    preferred_category: Optional[str] = None
+    notification_email: Optional[bool] = None
+    notification_sms: Optional[bool] = None
+
+
 def _to_float(value: str | None) -> float:
     if value is None:
         return 0.0
@@ -102,6 +146,396 @@ def _to_inr_label(value: str | None) -> str:
     if usd <= 0:
         return "N/A"
     return f"INR {usd * INR_RATE:,.0f}"
+
+
+def _jwt_secret() -> str:
+    return os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+
+
+def _jwt_algorithm() -> str:
+    return os.getenv("JWT_ALGORITHM", "HS256")
+
+
+def _create_access_token(data: dict) -> str:
+    payload = data.copy()
+    payload["exp"] = datetime.utcnow() + timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRY_MINUTES", "120")))
+    return jwt.encode(payload, _jwt_secret(), algorithm=_jwt_algorithm())
+
+
+def _decode_access_token(token: str) -> Optional[dict]:
+    try:
+        return jwt.decode(token, _jwt_secret(), algorithms=[_jwt_algorithm()])
+    except Exception:
+        return None
+
+
+def _sync_profile_best_effort(user_payload: dict) -> None:
+    supabase_url = (os.getenv("SUPABASE_URL") or "").rstrip("/")
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
+    profile_table = os.getenv("SUPABASE_PROFILE_TABLE", "profiles")
+    audit_table = os.getenv("SUPABASE_LOGIN_AUDIT_TABLE", "login_audit")
+
+    if not supabase_url or not service_key:
+        return
+
+    metadata = user_payload.get("user_metadata") or {}
+    email = user_payload.get("email") or ""
+    username = (
+        metadata.get("preferred_username")
+        or metadata.get("user_name")
+        or metadata.get("username")
+        or str(email).split("@", 1)[0]
+    )
+    profile_row = {
+        "id": user_payload.get("id"),
+        "email": email,
+        "username": username,
+        "full_name": metadata.get("full_name") or metadata.get("name") or "",
+        "avatar_url": metadata.get("avatar_url") or metadata.get("picture") or "",
+        "phone": user_payload.get("phone") or "",
+        "email_confirmed_at": user_payload.get("email_confirmed_at"),
+        "last_sign_in_at": user_payload.get("last_sign_in_at"),
+        "auth_provider": (user_payload.get("app_metadata") or {}).get("provider") or "google",
+        "user_metadata": metadata,
+        "app_metadata": user_payload.get("app_metadata") or {},
+        "provider": "google",
+        "last_login_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    headers = {
+        "apikey": service_key,
+        "Authorization": f"Bearer {service_key}",
+        "Content-Type": "application/json",
+    }
+
+    try:
+        requests.post(
+            f"{supabase_url}/rest/v1/{profile_table}",
+            headers={**headers, "Prefer": "resolution=merge-duplicates,return=minimal"},
+            json=profile_row,
+            timeout=10,
+        )
+    except Exception:
+        pass
+
+
+def _resolve_email_for_identifier(identifier: str) -> Optional[str]:
+    value = (identifier or "").strip()
+    if not value:
+        return None
+
+    if re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", value):
+        return value
+
+    supabase_url = (os.getenv("SUPABASE_URL") or "").rstrip("/")
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
+    profile_table = os.getenv("SUPABASE_PROFILE_TABLE", "profiles")
+    if not supabase_url or not service_key:
+        return None
+
+    try:
+        response = requests.get(
+            f"{supabase_url}/rest/v1/{profile_table}",
+            headers={
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
+                "Content-Type": "application/json",
+            },
+            params={
+                "select": "email,username,full_name",
+                "or": f"username.eq.{value},full_name.eq.{value}",
+                "limit": 1,
+            },
+            timeout=10,
+        )
+        response.raise_for_status()
+        data = response.json()
+        if isinstance(data, list) and data and data[0].get("email"):
+            return str(data[0]["email"])
+        return None
+    except Exception:
+        return None
+
+
+def _fetch_local_profile_by_id(profile_id: str) -> Optional[dict]:
+    supabase_url = (os.getenv("SUPABASE_URL") or "").rstrip("/")
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
+    profile_table = os.getenv("SUPABASE_PROFILE_TABLE", "profiles")
+    if not supabase_url or not service_key:
+        return None
+
+    try:
+        response = requests.get(
+            f"{supabase_url}/rest/v1/{profile_table}",
+            headers={
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
+                "Content-Type": "application/json",
+            },
+            params={"select": "*", "id": f"eq.{profile_id}", "limit": 1},
+            timeout=10,
+        )
+        if response.status_code >= 400:
+            return None
+        data = response.json()
+        if isinstance(data, list) and data:
+            return data[0]
+    except Exception:
+        return None
+    return None
+
+
+def _sanitize_profile_updates(updates: dict) -> dict:
+    allowed_fields = {
+        "full_name",
+        "username",
+        "email",
+        "avatar_url",
+        "phone",
+        "date_of_birth",
+        "bio",
+        "address_line_1",
+        "address_line_2",
+        "city",
+        "state",
+        "postal_code",
+        "country",
+        "preferred_category",
+        "notification_email",
+        "notification_sms",
+    }
+    return {key: value for key, value in updates.items() if key in allowed_fields and value is not None}
+
+
+def _update_profile_for_user(profile_id: str, updates: dict) -> dict:
+    supabase_url = (os.getenv("SUPABASE_URL") or "").rstrip("/")
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
+    profile_table = os.getenv("SUPABASE_PROFILE_TABLE", "profiles")
+    if not supabase_url or not service_key:
+        raise HTTPException(status_code=500, detail="Supabase service-role key is missing")
+
+    existing = _fetch_local_profile_by_id(profile_id) or {"id": profile_id}
+    sanitized = _sanitize_profile_updates(updates)
+    now = datetime.now(timezone.utc).isoformat()
+    merged = {
+        **existing,
+        **sanitized,
+        "id": profile_id,
+        "email": sanitized.get("email") or existing.get("email") or "",
+        "username": sanitized.get("username") or existing.get("username") or "",
+        "full_name": sanitized.get("full_name") or existing.get("full_name") or "",
+        "avatar_url": sanitized.get("avatar_url") or existing.get("avatar_url") or "",
+        "phone": sanitized.get("phone") or existing.get("phone") or "",
+        "date_of_birth": sanitized.get("date_of_birth") or existing.get("date_of_birth") or "",
+        "bio": sanitized.get("bio") or existing.get("bio") or "",
+        "address_line_1": sanitized.get("address_line_1") or existing.get("address_line_1") or "",
+        "address_line_2": sanitized.get("address_line_2") or existing.get("address_line_2") or "",
+        "city": sanitized.get("city") or existing.get("city") or "",
+        "state": sanitized.get("state") or existing.get("state") or "",
+        "postal_code": sanitized.get("postal_code") or existing.get("postal_code") or "",
+        "country": sanitized.get("country") or existing.get("country") or "",
+        "preferred_category": sanitized.get("preferred_category") or existing.get("preferred_category") or "",
+        "notification_email": sanitized.get("notification_email") if "notification_email" in sanitized else existing.get("notification_email", True),
+        "notification_sms": sanitized.get("notification_sms") if "notification_sms" in sanitized else existing.get("notification_sms", False),
+        "updated_at": now,
+        "last_login_at": existing.get("last_login_at") or now,
+    }
+
+    response = requests.post(
+        f"{supabase_url}/rest/v1/{profile_table}",
+        headers={
+            "apikey": service_key,
+            "Authorization": f"Bearer {service_key}",
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates,return=representation",
+        },
+        json=merged,
+        timeout=15,
+    )
+    if response.status_code >= 400:
+        raise HTTPException(status_code=response.status_code, detail=f"Profile update failed: {response.text}")
+
+    data = response.json()
+    return data[0] if isinstance(data, list) and data else merged
+
+
+def _fetch_local_profile_by_email(email: str) -> Optional[dict]:
+    supabase_url = (os.getenv("SUPABASE_URL") or "").rstrip("/")
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
+    profile_table = os.getenv("SUPABASE_PROFILE_TABLE", "profiles")
+    if not supabase_url or not service_key:
+        return None
+
+    try:
+        response = requests.get(
+            f"{supabase_url}/rest/v1/{profile_table}",
+            headers={
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
+                "Content-Type": "application/json",
+            },
+            params={"select": "*", "email": f"eq.{email.strip().lower()}", "limit": 1},
+            timeout=10,
+        )
+        if response.status_code >= 400:
+            return None
+        data = response.json()
+        if isinstance(data, list) and data:
+            return data[0]
+    except Exception:
+        return None
+    return None
+
+
+def _record_local_login_event(profile: dict) -> None:
+    supabase_url = (os.getenv("SUPABASE_URL") or "").rstrip("/")
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
+    audit_table = os.getenv("SUPABASE_LOGIN_AUDIT_TABLE", "login_audit")
+    if not supabase_url or not service_key:
+        return
+
+    try:
+        requests.post(
+            f"{supabase_url}/rest/v1/{audit_table}",
+            headers={
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
+                "Content-Type": "application/json",
+                "Prefer": "return=minimal",
+            },
+            json={
+                "user_id": profile.get("id"),
+                "email": profile.get("email"),
+                "provider": profile.get("auth_provider") or "email",
+                "full_name": profile.get("full_name") or "",
+                "username": profile.get("username") or "",
+                "avatar_url": profile.get("avatar_url") or "",
+                "phone": profile.get("phone") or "",
+                "email_confirmed_at": profile.get("email_confirmed_at"),
+                "last_sign_in_at": profile.get("last_sign_in_at"),
+                "auth_provider": profile.get("auth_provider") or "email",
+                "user_metadata": profile.get("user_metadata") or {},
+                "app_metadata": profile.get("app_metadata") or {},
+                "raw_login_payload": profile,
+                "logged_in_at": datetime.now(timezone.utc).isoformat(),
+            },
+            timeout=10,
+        )
+    except Exception:
+        pass
+
+
+def _create_local_email_account(email: str, password: str, username: str) -> dict:
+    supabase_url = (os.getenv("SUPABASE_URL") or "").rstrip("/")
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
+    profile_table = os.getenv("SUPABASE_PROFILE_TABLE", "profiles")
+    if not supabase_url or not service_key:
+        raise HTTPException(status_code=500, detail="Supabase service-role key is missing")
+
+    normalized_email = email.strip().lower()
+    if _fetch_local_profile_by_email(normalized_email):
+        raise HTTPException(status_code=409, detail="An account with this email already exists")
+
+    now = datetime.now(timezone.utc).isoformat()
+    profile_row = {
+        "id": str(uuid.uuid4()),
+        "email": normalized_email,
+        "username": username.strip(),
+        "full_name": username.strip(),
+        "avatar_url": "",
+        "phone": "",
+        "email_confirmed_at": now,
+        "last_sign_in_at": now,
+        "auth_provider": "email",
+        "user_metadata": {"username": username.strip(), "full_name": username.strip()},
+        "app_metadata": {"provider": "email"},
+        "identities": [],
+        "raw_user_payload": {"email": normalized_email, "username": username.strip(), "provider": "email"},
+        "provider": "email",
+        "password_hash": bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8"),
+        "updated_at": now,
+        "last_login_at": now,
+    }
+
+    response = requests.post(
+        f"{supabase_url}/rest/v1/{profile_table}",
+        headers={
+            "apikey": service_key,
+            "Authorization": f"Bearer {service_key}",
+            "Content-Type": "application/json",
+            "Prefer": "return=representation",
+        },
+        json=profile_row,
+        timeout=15,
+    )
+    if response.status_code >= 400:
+        response_text = response.text or ""
+        if "profiles_id_fkey" in response_text or '"code":"23503"' in response_text:
+            raise HTTPException(
+                status_code=400,
+                detail="Profiles table still has profiles_id_fkey. Run SUPABASE_AUTH_SETUP.sql to drop that constraint.",
+            )
+        raise HTTPException(status_code=response.status_code, detail=f"Profile create failed: {response.text}")
+
+    data = response.json()
+    profile = data[0] if isinstance(data, list) and data else profile_row
+    _record_local_login_event(profile)
+    return profile
+
+
+def _authenticate_local_email_account(email: str, password: str) -> dict:
+    profile = _fetch_local_profile_by_email(email)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    password_hash = profile.get("password_hash")
+    if not password_hash:
+        raise HTTPException(status_code=400, detail="This account does not use email/password login")
+
+    if not bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8")):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    supabase_url = (os.getenv("SUPABASE_URL") or "").rstrip("/")
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
+    profile_table = os.getenv("SUPABASE_PROFILE_TABLE", "profiles")
+    now = datetime.now(timezone.utc).isoformat()
+    if supabase_url and service_key:
+        try:
+            requests.patch(
+                f"{supabase_url}/rest/v1/{profile_table}",
+                headers={
+                    "apikey": service_key,
+                    "Authorization": f"Bearer {service_key}",
+                    "Content-Type": "application/json",
+                    "Prefer": "return=minimal",
+                },
+                params={"id": f"eq.{profile['id']}"},
+                json={"last_sign_in_at": now, "last_login_at": now},
+                timeout=10,
+            )
+        except Exception:
+            pass
+
+    profile["last_sign_in_at"] = now
+    profile["last_login_at"] = now
+    _record_local_login_event(profile)
+    return profile
+
+    try:
+        requests.post(
+            f"{supabase_url}/rest/v1/{audit_table}",
+            headers={**headers, "Prefer": "return=minimal"},
+            json={
+                "user_id": user_payload.get("id"),
+                "email": user_payload.get("email"),
+                "provider": "google",
+                "logged_in_at": datetime.now(timezone.utc).isoformat(),
+            },
+            timeout=10,
+        )
+    except Exception:
+        pass
 
 
 @lru_cache(maxsize=1)
@@ -450,6 +884,141 @@ def _register_routes(prefix: str) -> None:
     @router.get(f"{prefix}/health")
     def prefixed_health():
         return {"status": "healthy", "message": "All systems operational"}
+
+    @router.post(f"{prefix}/auth/sync-google-session")
+    def sync_google_session(payload: SessionSyncRequest):
+        supabase_url = (os.getenv("SUPABASE_URL") or "").rstrip("/")
+        anon_key = os.getenv("SUPABASE_ANON_KEY") or os.getenv("SUPABASE_KEY")
+        if not supabase_url or not anon_key:
+            raise HTTPException(status_code=500, detail="Supabase auth is not configured")
+
+        response = requests.get(
+            f"{supabase_url}/auth/v1/user",
+            headers={
+                "apikey": anon_key,
+                "Authorization": f"Bearer {payload.access_token}",
+            },
+            timeout=15,
+        )
+        if response.status_code >= 400:
+            raise HTTPException(status_code=401, detail="Invalid or expired Google session")
+
+        user_payload = response.json()
+        _sync_profile_best_effort(user_payload)
+
+        metadata = user_payload.get("user_metadata") or {}
+        app_token = _create_access_token(
+            {
+                "sub": user_payload.get("id"),
+                "email": user_payload.get("email"),
+                "name": metadata.get("full_name") or metadata.get("name") or "",
+            }
+        )
+
+        return {
+            "access_token": app_token,
+            "token_type": "bearer",
+            "user": {
+                "id": user_payload.get("id"),
+                "email": user_payload.get("email"),
+                "full_name": metadata.get("full_name") or metadata.get("name") or "",
+                "avatar_url": metadata.get("avatar_url") or metadata.get("picture") or "",
+            },
+            "message": "Google login successful",
+        }
+
+    @router.get(f"{prefix}/auth/me")
+    def auth_me(authorization: Optional[str] = Header(default=None)):
+        if not authorization or not authorization.lower().startswith("bearer "):
+            raise HTTPException(status_code=401, detail="Missing authorization header")
+        token = authorization.split(" ", 1)[1]
+        payload = _decode_access_token(token)
+        if not payload:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return {
+            "id": payload.get("sub"),
+            "email": payload.get("email"),
+            "full_name": payload.get("name", ""),
+        }
+
+    @router.get(f"{prefix}/auth/profile")
+    def auth_profile(authorization: Optional[str] = Header(default=None)):
+        if not authorization or not authorization.lower().startswith("bearer "):
+            raise HTTPException(status_code=401, detail="Missing authorization header")
+        token = authorization.split(" ", 1)[1]
+        payload = _decode_access_token(token)
+        if not payload or not payload.get("sub"):
+            raise HTTPException(status_code=401, detail="Invalid token")
+        profile = _fetch_local_profile_by_id(str(payload.get("sub")))
+        return {"profile": profile or {}, "message": "Profile loaded successfully"}
+
+    @router.put(f"{prefix}/auth/profile")
+    def update_auth_profile(payload: ProfileUpdateRequest, authorization: Optional[str] = Header(default=None)):
+        if not authorization or not authorization.lower().startswith("bearer "):
+            raise HTTPException(status_code=401, detail="Missing authorization header")
+        token = authorization.split(" ", 1)[1]
+        current_user = _decode_access_token(token)
+        if not current_user or not current_user.get("sub"):
+            raise HTTPException(status_code=401, detail="Invalid token")
+        profile = _update_profile_for_user(str(current_user.get("sub")), payload.model_dump(exclude_none=True))
+        return {"message": "Profile saved successfully", "profile": profile}
+
+    @router.post(f"{prefix}/auth/resolve-identifier")
+    def resolve_identifier(payload: ResolveIdentifierRequest):
+        email = _resolve_email_for_identifier(payload.identifier)
+        if not email:
+            raise HTTPException(status_code=404, detail="User not found")
+        return {"email": email}
+
+    @router.post(f"{prefix}/auth/create-email-account")
+    def create_email_account(payload: EmailSignupRequest):
+        profile = _create_local_email_account(payload.email, payload.password, payload.username)
+        app_token = _create_access_token(
+            {
+                "sub": profile.get("id"),
+                "email": profile.get("email"),
+                "name": profile.get("full_name") or profile.get("username") or "",
+            }
+        )
+        return {
+            "message": "Account created without confirmation email",
+            "user": {
+                "id": profile.get("id"),
+                "email": profile.get("email"),
+                "username": profile.get("username") or "",
+                "full_name": profile.get("full_name") or "",
+                "email_confirmed_at": profile.get("email_confirmed_at"),
+            },
+            "profile": profile,
+            "access_token": app_token,
+            "token_type": "bearer",
+        }
+
+    @router.post(f"{prefix}/auth/email-login")
+    def email_login(payload: EmailLoginRequest):
+        profile = _authenticate_local_email_account(payload.email, payload.password)
+        app_token = _create_access_token(
+            {
+                "sub": profile.get("id"),
+                "email": profile.get("email"),
+                "name": profile.get("full_name") or profile.get("username") or "",
+            }
+        )
+        return {
+            "access_token": app_token,
+            "token_type": "bearer",
+            "user": {
+                "id": profile.get("id"),
+                "email": profile.get("email"),
+                "username": profile.get("username") or "",
+                "full_name": profile.get("full_name") or "",
+                "avatar_url": profile.get("avatar_url") or "",
+                "email_confirmed_at": profile.get("email_confirmed_at"),
+                "last_sign_in_at": profile.get("last_sign_in_at"),
+                "auth_provider": profile.get("auth_provider") or "email",
+            },
+            "profile": profile,
+        }
 
     @router.get(f"{prefix}/orders")
     def get_all_orders(category: str | None = None, skip: int = 0, limit: int = 100):

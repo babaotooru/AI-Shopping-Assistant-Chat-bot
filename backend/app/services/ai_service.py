@@ -5,9 +5,27 @@ import os
 import json
 import re
 from typing import List, Dict, Any, Optional
+import requests
 from langchain_groq import ChatGroq
 from config import settings
 import logging
+
+CATALOG_SYSTEM_PROMPT = """You are an intelligent AI Shopping Assistant for an e-commerce platform.
+
+Your role is to help users discover, compare, and choose the best products based only on the provided product catalog.
+
+Important behavior rules:
+- Recommend only products found in the provided data.
+- Never invent products, prices, ratings, discounts, or specifications.
+- Give practical and useful shopping advice.
+- If multiple products match, rank them by relevance, rating, review count, and value for money.
+- If the user asks for the best product, recommend one top option first and explain why.
+- If the user asks for cheap, budget, or affordable products, prioritize lower price and decent quality.
+- If the user asks for premium or best quality, prioritize rating, reviews, and value.
+- If the user asks for a comparison, compare clearly in simple terms.
+- If no suitable product exists in the provided data, say so honestly.
+- Always respond like a smart e-commerce assistant, not a general chatbot.
+"""
 
 logger = logging.getLogger(__name__)
 
@@ -15,17 +33,24 @@ class AIService:
     """AI Service for LLM operations with deep search and structured answers"""
     
     def __init__(self):
-        """Initialize AI Service with llama-3.3-70b-versatile"""
+        """Initialize AI Service with Ollama-first and Groq fallback."""
         GROQ_API_KEY = settings.GROQ_API_KEY
 
         os.environ["GOOGLE_API_KEY"] = settings.GOOGLE_API_KEY
         os.environ["GROQ_API_KEY"] = GROQ_API_KEY
-        
-        # Using llama-3.3-70b-versatile as specified
-        self.llm = ChatGroq(
-            groq_api_key=GROQ_API_KEY,
-            model_name="llama-3.3-70b-versatile"
-        )
+
+        self.use_ollama = bool(settings.USE_OLLAMA)
+        self.ollama_base_url = settings.OLLAMA_BASE_URL.rstrip("/")
+        self.ollama_model = settings.OLLAMA_MODEL
+
+        self.llm = None
+        if GROQ_API_KEY:
+            self.llm = ChatGroq(
+                groq_api_key=GROQ_API_KEY,
+                model_name=settings.GROQ_MODEL or "llama3-70b-8192",
+                temperature=0.4,
+            )
+
         self.embeddings = None
         self.vectors = None
     
@@ -38,6 +63,34 @@ class AIService:
         except Exception as e:
             logger.error(f"Error creating vector embeddings: {str(e)}")
             raise
+
+    def _invoke_llm(self, prompt_text: str) -> str:
+        """Invoke Ollama first, then fallback to Groq if configured."""
+        if self.use_ollama:
+            try:
+                response = requests.post(
+                    f"{self.ollama_base_url}/api/generate",
+                    json={
+                        "model": self.ollama_model,
+                        "prompt": prompt_text,
+                        "stream": False,
+                        "options": {"temperature": 0.4},
+                    },
+                    timeout=60,
+                )
+                response.raise_for_status()
+                payload = response.json()
+                answer = str(payload.get("response", "")).strip()
+                if answer:
+                    return answer
+            except Exception as ollama_error:
+                logger.warning(f"Ollama unavailable, falling back if possible: {ollama_error}")
+
+        if self.llm is not None:
+            response = self.llm.invoke(prompt_text)
+            return response.content if hasattr(response, 'content') else str(response)
+
+        return ""
 
     def _extract_price_usd(self, price_text: str) -> float:
         """Extract numeric USD amount from mixed price strings."""
@@ -169,6 +222,27 @@ class AIService:
         answer_parts.append(f"\n💡 **Pro Tip:** You can refine your search by adding price range, specific features, or category in your query.")
 
         return "\n".join(answer_parts)
+
+    def _build_catalog_user_prompt(self, customer_query: str, product_context: str) -> str:
+        """Build the user prompt exactly in the catalog-constrained format."""
+        return f"""
+Customer Query:
+{customer_query}
+
+Available Matching Products:
+{product_context}
+
+Task:
+Answer the customer using only the available matching products.
+
+Response Requirements:
+- Recommend the best matching product first.
+- Mention why it is a good fit.
+- If useful, include 2-3 alternative products.
+- Mention price, rating, and value when relevant.
+- If the user asks to compare, compare clearly and practically.
+- Do not invent missing information.
+"""
     
     def answer_order_query(self, question: str, orders_data: str) -> str:
         """Generate intelligent answers using deep search and LLM analysis."""
@@ -186,30 +260,18 @@ class AIService:
             if not self.vectors:
                 self.create_vector_embeddings(json.dumps(relevant_products, ensure_ascii=False))
             
-            # Enhanced prompt for ChatGPT-like intelligent responses
-            prompt_text = f"""You are an expert shopping assistant AI (like ChatGPT) specialized in product intelligence and recommendations.
+            product_context = json.dumps(relevant_products, ensure_ascii=False)
 
-Analyze the user's query deeply and provide:
-1. Smart product matches with detailed insights
-2. Price and value analysis
-3. Quality assessment based on ratings and reviews
-4. Personalized recommendations
-5. Comparison insights if multiple products match
-6. Always use Indian Rupees (INR) for all prices (1 USD = 83 INR)
-7. Be conversational, informative, and helpful - not just listing data
-8. Format with clear sections, emojis, and markdown for readability
+            user_prompt = self._build_catalog_user_prompt(question, product_context)
+            prompt_text = f"""SYSTEM PROMPT:
+{CATALOG_SYSTEM_PROMPT}
 
-Available Products (curated from your orders):
-{json.dumps(relevant_products, ensure_ascii=False)}
-
-User Query: {question}
-
-Provide an intelligent, structured response that helps the user make informed decisions based on the product data. Focus on relevance and actionable insights."""
+USER PROMPT:
+{user_prompt}
+"""
             
-            response = self.llm.invoke(prompt_text)
-            
-            answer = response.content if hasattr(response, 'content') else str(response)
-            # Fallback to structured answer if LLM response is empty
+            answer = self._invoke_llm(prompt_text)
+            # Fallback to structured answer if model response is empty
             return answer if answer and len(answer) > 30 else self._generate_structured_answer(question, relevant_products)
             
         except Exception as e:
@@ -217,43 +279,112 @@ Provide an intelligent, structured response that helps the user make informed de
             # Use fallback structured answer on any error
             return self._generate_structured_answer(question, self._deep_search_products(question, orders_list, limit=20))
     
-    def get_recommendations(self, product: str, count: int = 5) -> str:
-        """Get product recommendations"""
+    def get_recommendations(self, product: str, count: int = 5, available_products: Optional[List[Dict[str, Any]]] = None) -> str:
+        """Get product recommendations from provided catalog context only."""
         try:
-            prompt = f"""
-            Suggest {count} products similar to '{product}' with:
-            - Product Name
-            - Description (2-3 lines)
-            - Estimated Price Range
-            - Key Features (3-4 bullet points)
-            
-            Format as a structured list with clear separations.
-            Make suggestions realistic and relevant.
-            """
-            
-            response = self.llm.invoke(prompt)
-            return response.content if hasattr(response, 'content') else str(response)
+            candidates = available_products or []
+            if not candidates:
+                return "I could not find suitable products in the provided catalog for that request."
+
+            prompt = f"""SYSTEM PROMPT:
+You are an intelligent AI Shopping Assistant for an e-commerce platform.
+
+Your role is to help users discover, compare, and choose the best products based only on the provided product catalog.
+
+Important behavior rules:
+- Recommend only products found in the provided data.
+- Never invent products, prices, ratings, discounts, or specifications.
+- Give practical and useful shopping advice.
+- If multiple products match, rank them by relevance, rating, review count, and value for money.
+- If the user asks for the best product, recommend one top option first and explain why.
+- If the user asks for cheap, budget, or affordable products, prioritize lower price and decent quality.
+- If the user asks for premium or best quality, prioritize rating, reviews, and value.
+- If the user asks for a comparison, compare clearly in simple terms.
+- If no suitable product exists in the provided data, say so honestly.
+- Always respond like a smart e-commerce assistant, not a general chatbot.
+
+Style:
+- Human-like
+- Helpful
+- Shopping-focused
+- Clear and concise
+
+USER PROMPT TEMPLATE:
+Customer Query:
+Recommend {count} products similar to: {product}
+
+Available Matching Products:
+{json.dumps(candidates, ensure_ascii=False)}
+
+Task:
+Answer the customer using only the available matching products.
+
+Response Requirements:
+- Recommend the best matching product first.
+- Mention why it is a good fit.
+- If useful, include 2-3 alternative products.
+- Mention price, rating, and value when relevant.
+- If the user asks to compare, compare clearly and practically.
+- Do not invent missing information.
+"""
+
+            answer = self._invoke_llm(prompt)
+            return answer if answer else "Unable to generate recommendations right now."
         except Exception as e:
             logger.error(f"Error generating recommendations: {str(e)}")
             raise
     
-    def compare_products(self, product1: str, product2: str) -> str:
-        """Compare two products"""
+    def compare_products(self, product1: str, product2: str, available_products: Optional[List[Dict[str, Any]]] = None) -> str:
+        """Compare two products using only provided catalog context."""
         try:
-            prompt = f"""
-            Compare '{product1}' vs '{product2}' based on:
-            - Price Range
-            - Key Features
-            - Performance/Quality
-            - Pros & Cons (for each)
-            - Which is better for different use cases
-            - Overall Recommendation
-            
-            Provide a detailed, structured comparison that helps users make a decision.
-            """
-            
-            response = self.llm.invoke(prompt)
-            return response.content if hasattr(response, 'content') else str(response)
+            candidates = available_products or []
+            if not candidates:
+                return "I could not find enough matching products in the provided catalog to make a reliable comparison."
+
+            prompt = f"""SYSTEM PROMPT:
+You are an intelligent AI Shopping Assistant for an e-commerce platform.
+
+Your role is to help users discover, compare, and choose the best products based only on the provided product catalog.
+
+Important behavior rules:
+- Recommend only products found in the provided data.
+- Never invent products, prices, ratings, discounts, or specifications.
+- Give practical and useful shopping advice.
+- If multiple products match, rank them by relevance, rating, review count, and value for money.
+- If the user asks for the best product, recommend one top option first and explain why.
+- If the user asks for cheap, budget, or affordable products, prioritize lower price and decent quality.
+- If the user asks for premium or best quality, prioritize rating, reviews, and value.
+- If the user asks for a comparison, compare clearly in simple terms.
+- If no suitable product exists in the provided data, say so honestly.
+- Always respond like a smart e-commerce assistant, not a general chatbot.
+
+Style:
+- Human-like
+- Helpful
+- Shopping-focused
+- Clear and concise
+
+USER PROMPT TEMPLATE:
+Customer Query:
+Compare {product1} vs {product2}
+
+Available Matching Products:
+{json.dumps(candidates, ensure_ascii=False)}
+
+Task:
+Answer the customer using only the available matching products.
+
+Response Requirements:
+- Recommend the best matching product first.
+- Mention why it is a good fit.
+- If useful, include 2-3 alternative products.
+- Mention price, rating, and value when relevant.
+- If the user asks to compare, compare clearly and practically.
+- Do not invent missing information.
+"""
+
+            answer = self._invoke_llm(prompt)
+            return answer if answer else "Unable to generate comparison right now."
         except Exception as e:
             logger.error(f"Error comparing products: {str(e)}")
             raise

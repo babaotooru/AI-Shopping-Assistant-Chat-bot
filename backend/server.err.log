@@ -1,0 +1,1 @@
+Supabase read failed, falling back to local CSV/JSON: 404 Client Error: Not Found for url: https://ivlmvggpswfwtjzvbave.supabase.co/rest/v1/orders?select=%2A
