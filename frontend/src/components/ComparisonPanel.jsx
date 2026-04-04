@@ -554,11 +554,11 @@ export function ComparisonPanel() {
                                 )}
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2">
                                 {item.product_id && (
                                     <button
                                         onClick={() => navigate(`/products/${encodeURIComponent(item.product_id)}`)}
-                                        className="flex-1 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold py-2 rounded text-sm"
+                                        className="w-full sm:flex-1 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold py-2 rounded text-sm"
                                     >
                                         View Details
                                     </button>
@@ -568,7 +568,7 @@ export function ComparisonPanel() {
                                         href={item.product_page_url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 rounded text-sm text-center"
+                                        className="w-full sm:flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 rounded text-sm text-center"
                                     >
                                         Amazon Page
                                     </a>

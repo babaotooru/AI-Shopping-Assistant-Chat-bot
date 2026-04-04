@@ -9,7 +9,7 @@ export function ChatPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-6">
-                <div className="h-[78vh] min-h-[620px]">
+                <div className="h-[calc(100dvh-8.5rem)] min-h-[520px] sm:h-[78vh] sm:min-h-[620px]">
                     <ChatBox />
                 </div>
             </div>

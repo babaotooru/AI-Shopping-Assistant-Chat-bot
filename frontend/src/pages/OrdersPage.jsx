@@ -216,7 +216,7 @@ export function OrdersPage() {
             <div className="rounded-lg border border-sky-100 bg-sky-50 px-4 py-2 text-sm text-sky-800">{infoMessage}</div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[270px_minmax(0,1fr)]">
-                <aside className="space-y-5">
+                <aside className="order-2 space-y-5 lg:order-1">
                     <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
                         <h2 className="mb-3 text-sm font-extrabold uppercase tracking-wide text-slate-700">Best Category In This Brand</h2>
                         <div className="space-y-2">
@@ -318,7 +318,7 @@ export function OrdersPage() {
                     </button>
                 </aside>
 
-                <section>
+                <section className="order-1 lg:order-2">
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                         <div className="flex flex-wrap items-center gap-2">
                             <p className="text-sm font-extrabold uppercase tracking-wide text-slate-700">Best Category In This Brand</p>

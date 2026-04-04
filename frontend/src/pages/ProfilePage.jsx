@@ -259,7 +259,7 @@ export function ProfilePage() {
                             <input value={profileForm.address_line_2} onChange={(e) => updateField('address_line_2', e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-rose-400" />
                         </label>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <label className="block space-y-1">
                                 <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">City *</span>
                                 <input value={profileForm.city} onChange={(e) => updateField('city', e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-rose-400" />
@@ -270,7 +270,7 @@ export function ProfilePage() {
                             </label>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <label className="block space-y-1">
                                 <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Postal Code *</span>
                                 <input value={profileForm.postal_code} onChange={(e) => updateField('postal_code', e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-rose-400" />
@@ -319,7 +319,7 @@ export function ProfilePage() {
                 <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
                     {renderSectionHeader('Rewards & Settings')}
 
-                    <div className="grid grid-cols-3 gap-3 text-center">
+                    <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3">
                         <div className="rounded-2xl bg-sky-50 p-3">
                             <p className="text-lg">⚙️</p>
                             <p className="mt-1 text-xs text-slate-700">Account</p>
@@ -375,7 +375,7 @@ export function ProfilePage() {
                 </div>
 
                 <div className="grid gap-5 p-4 sm:p-6 lg:grid-cols-[280px_1fr]">
-                    <aside className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
+                    <aside className="order-2 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100 lg:order-1">
                         <div className="mb-5 flex items-center gap-3">
                             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-200 font-bold text-slate-700">
                                 {initials}
@@ -401,7 +401,7 @@ export function ProfilePage() {
                         </nav>
                     </aside>
 
-                    <div>
+                    <div className="order-1 lg:order-2">
                         {renderContent()}
 
                         <div className="mt-4 text-right text-xs text-slate-500">

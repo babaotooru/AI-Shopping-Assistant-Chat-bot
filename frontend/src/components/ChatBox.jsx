@@ -180,7 +180,7 @@ export function ChatBox() {
     return (
         <div className="h-full rounded-[28px] bg-[#f4f1f8] p-3 sm:p-4">
             <div className="grid h-full grid-cols-1 gap-3 lg:grid-cols-[320px_1fr_320px]">
-                <aside className="flex h-full flex-col overflow-hidden rounded-2xl border border-[#e8e3f1] bg-white">
+                <aside className="order-2 flex max-h-[30dvh] flex-col overflow-hidden rounded-2xl border border-[#e8e3f1] bg-white lg:order-1 lg:max-h-none lg:h-full">
                     <div className="border-b border-slate-100 px-4 py-4">
                         <h2 className="text-[28px] font-semibold tracking-tight text-slate-800">Your visitors</h2>
                         <p className="mt-1 text-xs text-slate-500">Logged-in users ({visitors.length})</p>
@@ -217,7 +217,7 @@ export function ChatBox() {
                     </div>
                 </aside>
 
-                <section className="flex h-full flex-col overflow-hidden rounded-2xl border border-[#e8e3f1] bg-white">
+                <section className="order-1 flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-[#e8e3f1] bg-white lg:order-2">
                     <header className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                         <div className="flex items-center gap-3">
                             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ede8ff] text-xs font-semibold text-[#5d52a8]">
@@ -252,7 +252,7 @@ export function ChatBox() {
                             {messages.map((msg, idx) => (
                                 <div key={msg.id || idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div
-                                        className={`max-w-[75%] rounded-xl px-4 py-3 text-sm ${msg.role === 'user'
+                                        className={`max-w-[88%] sm:max-w-[75%] rounded-xl px-4 py-3 text-sm ${msg.role === 'user'
                                             ? 'bg-[#e9f4ff] text-slate-800'
                                             : 'bg-white text-slate-700 ring-1 ring-slate-100'
                                             }`}
@@ -295,7 +295,7 @@ export function ChatBox() {
                     </div>
                 </section>
 
-                <aside className="flex h-full flex-col gap-3 overflow-y-auto">
+                <aside className="order-3 flex max-h-[34dvh] flex-col gap-3 overflow-y-auto lg:max-h-none lg:h-full">
                     <div className="rounded-2xl border border-[#e8e3f1] bg-white p-4">
                         <h3 className="text-sm font-semibold text-slate-800">Visitor details</h3>
                         <dl className="mt-3 space-y-2 text-xs">
