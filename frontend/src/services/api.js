@@ -1,11 +1,12 @@
 import axios from 'axios';
 
 const configuredApiUrl = (import.meta.env.VITE_API_URL || '').trim();
-const isConfiguredLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(configuredApiUrl);
+const isProduction = !import.meta.env.DEV;
+const isConfiguredLocalhost = /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(configuredApiUrl);
 
-export const API_BASE_URL = !import.meta.env.DEV && isConfiguredLocalhost
+export const API_BASE_URL = isProduction
   ? '/api/v1'
-  : (configuredApiUrl || (import.meta.env.DEV ? 'http://localhost:8000/api/v1' : '/api/v1'));
+  : (configuredApiUrl || (isConfiguredLocalhost ? 'http://localhost:8000/api/v1' : '/api/v1'));
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
