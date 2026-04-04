@@ -15,6 +15,20 @@ export function LoginPage() {
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const oauthRetryFlagKey = 'google-oauth-pkce-retry';
+    const configuredAppUrl = (import.meta.env.VITE_PUBLIC_APP_URL || '').trim().replace(/\/+$/, '');
+
+    const getOAuthRedirectUrl = () => {
+        const safeBasePath = String(appBasePath || '/');
+        const prefersConfiguredUrl = configuredAppUrl && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(configuredAppUrl);
+        const appOrigin = prefersConfiguredUrl ? configuredAppUrl : window.location.origin;
+        return new URL(safeBasePath, `${appOrigin}/`).toString();
+    };
+
+    const sanitizeOAuthCode = (code) => {
+        const raw = String(code || '').trim();
+        if (!raw) return null;
+        return raw.split('http://')[0].split('https://')[0].trim() || null;
+    };
 
     const getParamFromUrl = (name) => {
         const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -25,7 +39,7 @@ export function LoginPage() {
     const getAuthCodeFromUrl = () => {
         const searchCode = new URLSearchParams(window.location.search).get('code');
         if (searchCode) {
-            return searchCode;
+            return sanitizeOAuthCode(searchCode);
         }
 
         const hash = window.location.hash || '';
@@ -33,7 +47,7 @@ export function LoginPage() {
         if (!hashQuery) {
             return null;
         }
-        return new URLSearchParams(hashQuery).get('code');
+        return sanitizeOAuthCode(new URLSearchParams(hashQuery).get('code'));
     };
 
     const applySessionFallbackLogin = async (session) => {
@@ -109,7 +123,7 @@ export function LoginPage() {
                     const alreadyRetried = sessionStorage.getItem(oauthRetryFlagKey) === '1';
                     if (!alreadyRetried) {
                         sessionStorage.setItem(oauthRetryFlagKey, '1');
-                        const redirectTo = new URL(appBasePath, window.location.origin).toString();
+                        const redirectTo = getOAuthRedirectUrl();
                         await supabase.auth.signInWithOAuth({
                             provider: 'google',
                             options: {
@@ -200,7 +214,7 @@ export function LoginPage() {
         try {
             setLoading(true);
             setError('');
-            const redirectTo = new URL(appBasePath, window.location.origin).toString();
+            const redirectTo = getOAuthRedirectUrl();
 
             // OAuth callbacks should return to the app base URL (without hash)
             // so Supabase can reliably parse query/hash auth params.
